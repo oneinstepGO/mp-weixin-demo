@@ -26,6 +26,7 @@ public class RpcServiceProxy {
 
     @SuppressWarnings("unchecked")
     public <T> T createProxy(Class<T> interfaceClass) {
+        // use JDK dynamic proxy to create a proxy object
         return (T) Proxy.newProxyInstance(
                 interfaceClass.getClassLoader(),
                 new Class<?>[]{interfaceClass},
@@ -69,7 +70,6 @@ public class RpcServiceProxy {
                         throw new RuntimeException("RPC Error: " + rpcResponse.getError());
                     }
 
-                    // 返回 RPC 响应结果、
                     Object result = rpcResponse.getResult();
                     log.info("RPC Response: {}", result);
 

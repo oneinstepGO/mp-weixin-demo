@@ -50,6 +50,8 @@ public class ServiceRegistry {
      */
     public void register(String serviceName, String serviceAddress) throws Exception {
         String servicePath = "/my-rpc/" + serviceName;
+        // Create a ephemeral sequential node, When the connection is closed, the node will be deleted automatically
+        // The node name is like: /my-rpc/com.oneinstep.myrpc.api.ExampleService/address-0000000001
         client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL_SEQUENTIAL)
                 .forPath(servicePath + "/address-", serviceAddress.getBytes());
         log.info("Service registered: {} at {}", serviceName, serviceAddress);

@@ -51,7 +51,7 @@ public class RpcClient {
                         }
                     });
 
-            // add response to the map
+            // 将 requestId 和响应对象的映射关系存入 CompletableFuture
             CompletableFuture<RpcResponse> completableFuture = RpcClientHandler.addResponse(request.getRequestId());
             // 连接服务器
             ChannelFuture future = bootstrap.connect(host, port).sync();
@@ -72,7 +72,7 @@ public class RpcClient {
         } finally {
             // 关闭 EventLoopGroup
             group.shutdownGracefully();
-            // Remove the response from the map
+            // 移除 requestId 和响应对象的映射关系
             RpcClientHandler.removeResponse(request.getRequestId());
         }
     }

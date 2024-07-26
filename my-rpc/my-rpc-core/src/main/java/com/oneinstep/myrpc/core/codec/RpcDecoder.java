@@ -33,6 +33,7 @@ public class RpcDecoder extends ByteToMessageDecoder {
 
         // Mark the current read index so that we can reset it when needed
         in.markReaderIndex();
+        // 读取数据长度
         int dataLength = in.readInt();
         if (dataLength < 0) {
             ctx.close();

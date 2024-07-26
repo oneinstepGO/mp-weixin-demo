@@ -27,7 +27,7 @@ public class RpcClientHandler extends SimpleChannelInboundHandler<RpcResponse> {
                 return;
             }
 
-            // 存储响应并记录日志
+            // 获取与 requestId 对应的 CompletableFuture
             CompletableFuture<RpcResponse> future = responseMap.get(response.getRequestId());
             if (future == null) {
                 log.warn("No pending requests found for requestId: {}", response.getRequestId());

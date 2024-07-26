@@ -1,10 +1,10 @@
 package com.oneinstep.myrpc.core.server;
 
 import com.oneinstep.myrpc.core.annotation.RpcService;
-import com.oneinstep.myrpc.core.dto.RpcRequest;
-import com.oneinstep.myrpc.core.dto.RpcResponse;
 import com.oneinstep.myrpc.core.codec.RpcDecoder;
 import com.oneinstep.myrpc.core.codec.RpcEncoder;
+import com.oneinstep.myrpc.core.dto.RpcRequest;
+import com.oneinstep.myrpc.core.dto.RpcResponse;
 import com.oneinstep.myrpc.core.registry.ServiceRegistry;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -20,7 +20,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.net.InetAddress;
@@ -42,8 +41,6 @@ public class RpcServer implements ApplicationListener<ContextRefreshedEvent> {
      */
     @Resource
     private ServiceRegistry serviceRegistry;
-    @Resource
-    private Environment environment;
     /**
      * Server port
      */
@@ -54,6 +51,11 @@ public class RpcServer implements ApplicationListener<ContextRefreshedEvent> {
      */
     private final ConcurrentMap<String, Object> handlerMap = new ConcurrentHashMap<>();
 
+    /**
+     * Spring 容器初始化完成后调用
+     *
+     * @param event context refreshed event
+     */
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         log.info("Starting RPC Server...");
@@ -73,18 +75,15 @@ public class RpcServer implements ApplicationListener<ContextRefreshedEvent> {
             try {
                 // Register the service to ZooKeeper
                 // get the service address
-                String ipAddress = "127.0.0.1";
-                try {
-                    InetAddress inetAddress = InetAddress.getLocalHost();
-                    ipAddress = inetAddress.getHostAddress();
-                    log.info("本机IP地址: {}", ipAddress);
-                } catch (UnknownHostException e) {
-                    log.error("Failed to get the IP address", e);
-                }
+                InetAddress inetAddress = InetAddress.getLocalHost();
+                String ipAddress = inetAddress.getHostAddress();
+                log.info("本机IP地址: {}", ipAddress);
                 serviceRegistry.register(interfaceName, ipAddress + ":" + bindPort);
                 // Store the service name and corresponding service object
                 handlerMap.putIfAbsent(interfaceName, serviceBean);
                 log.info("Registered service: {}", interfaceName);
+            } catch (UnknownHostException e) {
+                log.error("Failed to get the IP address", e);
             } catch (Exception e) {
                 log.error("Failed to register service", e);
             }
