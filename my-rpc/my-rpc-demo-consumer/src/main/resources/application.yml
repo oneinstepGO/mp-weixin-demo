@@ -1,0 +1,9 @@
+server:
+  port: 8082
+
+zookeeper:
+  address: localhost:2181
+
+netty:
+  bind:
+    port: 10232

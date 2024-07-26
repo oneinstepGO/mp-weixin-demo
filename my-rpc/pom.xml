@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.2</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+
+    <groupId>com.oneinstep.demo</groupId>
+    <artifactId>my-rpc</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>my-rpc</name>
+
+    <modules>
+        <module>my-rpc-core</module>
+        <module>my-rpc-demo-api</module>
+        <module>my-rpc-demo-provider</module>
+        <module>my-rpc-demo-consumer</module>
+    </modules>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <java.version>17</java.version>
+        <netty.version>4.1.112.Final</netty.version>
+        <curator.version>5.7.0</curator.version>
+        <my-rpc.version>0.0.1-SNAPSHOT</my-rpc.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- zookeeper client -->
+            <dependency>
+                <groupId>org.apache.curator</groupId>
+                <artifactId>curator-framework</artifactId>
+                <version>${curator.version}</version>
+            </dependency>
+            <!-- netty -->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oneinstep.demo</groupId>
+                <artifactId>my-rpc-core</artifactId>
+                <version>${my-rpc.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+</project>
