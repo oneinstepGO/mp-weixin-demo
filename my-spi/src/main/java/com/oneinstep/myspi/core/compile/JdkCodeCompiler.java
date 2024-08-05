@@ -8,21 +8,12 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * JDK 代码编译器
  */
-public class JdkCompiler implements Compiler {
+public class JdkCodeCompiler extends AbsCodeCompiler {
 
-    private static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+([$_a-zA-Z][$_a-zA-Z0-9.]*);");
-    private static final Pattern CLASS_PATTERN = Pattern.compile("class\\s+([$_a-zA-Z][$_a-zA-Z0-9]*)\\s+");
-    // 类创建中的锁
-    private static final Map<String, Lock> CLASS_IN_CREATION_MAP = new ConcurrentHashMap<>();
     // 编译器
     private final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     // 诊断收集器
@@ -34,11 +25,11 @@ public class JdkCompiler implements Compiler {
     // 默认 Java 版本
     private static final String DEFAULT_JAVA_VERSION = "17";
 
-    public JdkCompiler() {
+    public JdkCodeCompiler() {
         this(buildDefaultOptions());
     }
 
-    public JdkCompiler(String javaVersion) {
+    public JdkCodeCompiler(String javaVersion) {
         this(buildDefaultOptions(javaVersion));
     }
 
@@ -50,7 +41,7 @@ public class JdkCompiler implements Compiler {
         return buildDefaultOptions(DEFAULT_JAVA_VERSION);
     }
 
-    public JdkCompiler(List<String> options) {
+    public JdkCodeCompiler(List<String> options) {
         this.options = new ArrayList<>(options);
         StandardJavaFileManager manager = compiler.getStandardFileManager(diagnosticCollector, null, null);
         final ClassLoader loader = Thread.currentThread().getContextClassLoader();
@@ -70,91 +61,32 @@ public class JdkCompiler implements Compiler {
         javaFileManager = new JavaFileManagerImpl(manager, classLoader);
     }
 
-    /**
-     * 编译
-     *
-     * @param sourceCode  源码
-     * @param classLoader 类加载器
-     * @return 类
-     */
     @Override
-    public Class<?> compile(String sourceCode, ClassLoader classLoader) {
-        sourceCode = sourceCode.trim();
+    protected Class<?> doCompile(String sourceCode, String className, ClassLoader classLoader) throws Exception {
         String name = getClassName(sourceCode);
-        Lock lock = CLASS_IN_CREATION_MAP.get(name);
-        if (lock == null) {
-            CLASS_IN_CREATION_MAP.putIfAbsent(name, new ReentrantLock());
-            lock = CLASS_IN_CREATION_MAP.get(name);
-        }
-        try {
-            lock.lock();
-            // 尝试获取已经加载的类
-            return Class.forName(name, true, classLoader);
-        } catch (ClassNotFoundException e) {
-            // 没有加载 则使用源码编译
-            if (!sourceCode.endsWith("}")) {
-                throw new IllegalStateException("The java code not endsWith \"}\", code: \n" + sourceCode + "\n");
-            }
+        int i = name.lastIndexOf('.');
+        // 包名
+        String packageName = i < 0 ? "" : name.substring(0, i);
 
-            int i = name.lastIndexOf('.');
-            // 包名
-            String packageName = i < 0 ? "" : name.substring(0, i);
-            // 类名
-            String className = i < 0 ? name : name.substring(i + 1);
-
-            try {
-                // 创建 Java 源码文件对象
-                JavaFileObjectImpl javaFileObject = new JavaFileObjectImpl(className, sourceCode);
-                // 将源码文件对象放入文件管理器
-                javaFileManager.putFileForInput(StandardLocation.SOURCE_PATH, packageName, className + ClassUtils.JAVA_EXTENSION, javaFileObject);
-                // 启动编译任务
-                Boolean result = compiler.getTask(
-                        null,
-                        javaFileManager,
-                        diagnosticCollector,
-                        options,
-                        null,
-                        Collections.singletonList(javaFileObject)).call();
-                if (result == null || !result) {
-                    // 编译失败
-                    throw new IllegalStateException(
-                            "Compilation failed. class: " + name + ", diagnostics: " + diagnosticCollector.getDiagnostics());
-                }
-                // 加载类
-                return javaFileManager.getClassLoader(null).loadClass(name);
-            } catch (RuntimeException t) {
-                throw t;
-            } catch (Exception t) {
-                throw new IllegalStateException("Failed to compile class, cause: " + t.getMessage() + ", class: "
-                        + className + ", code: \n" + sourceCode + "\n, stack: " + ClassUtils.toString(t));
-            }
-        } finally {
-            lock.unlock();
+        // 创建 Java 源码文件对象
+        JavaFileObjectImpl javaFileObject = new JavaFileObjectImpl(className, sourceCode);
+        // 将源码文件对象放入文件管理器
+        javaFileManager.putFileForInput(StandardLocation.SOURCE_PATH, packageName, className + ClassUtils.JAVA_EXTENSION, javaFileObject);
+        // 启动编译任务
+        Boolean result = compiler.getTask(
+                null,
+                javaFileManager,
+                diagnosticCollector,
+                options,
+                null,
+                Collections.singletonList(javaFileObject)).call();
+        if (result == null || !result) {
+            // 编译失败
+            throw new IllegalStateException(
+                    "Compilation failed. class: " + name + ", diagnostics: " + diagnosticCollector.getDiagnostics());
         }
-    }
-
-    /**
-     * 获取类名
-     *
-     * @param code 代码
-     * @return 类名
-     */
-    private static String getClassName(String code) {
-        Matcher matcher = PACKAGE_PATTERN.matcher(code);
-        String pkg;
-        if (matcher.find()) {
-            pkg = matcher.group(1);
-        } else {
-            pkg = "";
-        }
-        matcher = CLASS_PATTERN.matcher(code);
-        String cls;
-        if (matcher.find()) {
-            cls = matcher.group(1);
-        } else {
-            throw new IllegalArgumentException("No such class name in " + code);
-        }
-        return pkg != null && !pkg.isEmpty() ? pkg + "." + cls : cls;
+        // 加载类
+        return javaFileManager.getClassLoader(null).loadClass(name);
     }
 
     private static boolean isAppClassLoader(ClassLoader classLoader) {

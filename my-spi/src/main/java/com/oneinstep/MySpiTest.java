@@ -69,7 +69,10 @@ public class MySpiTest {
     }
 
     private static void printCurrExtensions(ExtensionLoader<RegistryFactory> extensionLoader) {
-        log.info("printCurrExtensions => AllExtensionLoaderTypes = {}, CachedClassesNames = {}, ExtensionInstances = {}", ExtensionLoader.getAllExtensionLoaderTypes(), extensionLoader.getCachedClassesName(), extensionLoader.getExtensionInstances());
+        log.info("printCurrExtensions => AllExtensionLoaderTypes = {}, CachedClassesNames = {}, ExtensionInstances = {}",
+                ExtensionLoader.getAllExtensionLoaderTypes(),
+                extensionLoader.getCachedClassesName(),
+                extensionLoader.getExtensionInstances());
     }
 
 }

@@ -4,7 +4,8 @@
 package com.oneinstep.myspi.core;
 
 import com.oneinstep.myspi.core.compile.AdaptiveClassCodeGenerator;
-import com.oneinstep.myspi.core.compile.JdkCompiler;
+import com.oneinstep.myspi.core.compile.CodeCompiler;
+import com.oneinstep.myspi.core.compile.JavassistCodeCompiler;
 import com.oneinstep.myspi.core.inject.ExtensionInjector;
 import com.oneinstep.myspi.core.inject.SpiExtensionInjector;
 import com.oneinstep.myspi.core.utils.ClassLoaderResourceLoader;
@@ -107,6 +108,11 @@ public class ExtensionLoader<T> {
      */
     private static final AtomicBoolean DESTROYED = new AtomicBoolean();
 
+    /**
+     * 编译器
+     */
+    private static final CodeCompiler CODE_COMPILER = new JavassistCodeCompiler();
+
     ExtensionLoader(Class<?> type) {
         this.type = type;
         this.injector = (type == ExtensionInjector.class
@@ -156,10 +162,8 @@ public class ExtensionLoader<T> {
         return new ArrayList<>(classMap.keySet());
     }
 
-    public List<String> getExtensionInstances() {
-        List<String> instances = new ArrayList<>();
-        extensionInstances.forEach((clazz, instance) -> instances.add("{Class: " + clazz.getSimpleName() + ", hashCode: " + instances.hashCode() + "}"));
-        return instances;
+    public List<Object> getExtensionInstances() {
+        return new ArrayList<>(extensionInstances.values());
     }
 
     /**
@@ -598,8 +602,8 @@ public class ExtensionLoader<T> {
         ClassLoader classLoader = type.getClassLoader();
         log.info("classLoader: {}", classLoader);
         String code = new AdaptiveClassCodeGenerator(type, cachedDefaultName).generate();
-        JdkCompiler compiler = new JdkCompiler();
-        return compiler.compile(code, classLoader);
+        // 使用 JDK Compiler 编译代码
+        return CODE_COMPILER.compile(code, classLoader);
     }
 
     private static void checkDestroyed() {

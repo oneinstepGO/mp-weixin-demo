@@ -92,10 +92,12 @@ public class AdaptiveClassCodeGenerator {
             code.append(generateMethod(method));
         }
         code.append('}');
+
+        String finalCode = code.toString();
         System.out.println("========================= generate adaptive class code start =========================");
-        System.out.println(code);
+        System.out.println(finalCode);
         System.out.println("========================= generate adaptive class code end =========================");
-        return code.toString();
+        return finalCode;
     }
 
     /**
