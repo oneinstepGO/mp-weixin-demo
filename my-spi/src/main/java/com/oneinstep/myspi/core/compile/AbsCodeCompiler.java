@@ -8,6 +8,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * 抽象代码编译器
+ */
 public abstract class AbsCodeCompiler implements CodeCompiler {
 
     private static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+([$_a-zA-Z][$_a-zA-Z0-9.]*);");
@@ -18,13 +21,17 @@ public abstract class AbsCodeCompiler implements CodeCompiler {
     @Override
     public Class<?> compile(String sourceCode, ClassLoader classLoader) {
         sourceCode = sourceCode.trim();
+        // 获取类名
         String name = getClassName(sourceCode);
+        // 获取类创建中的锁
         Lock lock = CLASS_IN_CREATION_MAP.get(name);
         if (lock == null) {
+            // 如果没有锁则创建一个
             CLASS_IN_CREATION_MAP.putIfAbsent(name, new ReentrantLock());
             lock = CLASS_IN_CREATION_MAP.get(name);
         }
         try {
+            // 加锁
             lock.lock();
             // 尝试获取已经加载的类
             return Class.forName(name, true, classLoader);
@@ -45,6 +52,7 @@ public abstract class AbsCodeCompiler implements CodeCompiler {
                         + className + ", code: \n" + sourceCode + "\n, stack: " + ClassUtils.toString(t));
             }
         } finally {
+            // 释放锁
             lock.unlock();
         }
     }
@@ -67,5 +75,14 @@ public abstract class AbsCodeCompiler implements CodeCompiler {
         return pkg != null && !pkg.isEmpty() ? pkg + "." + cls : cls;
     }
 
+    /**
+     * 执行编译 模板方法 由子类实现
+     *
+     * @param sourceCode  源码
+     * @param className   类名
+     * @param classLoader 类加载器
+     * @return 编译后的类
+     * @throws Exception 异常
+     */
     protected abstract Class<?> doCompile(String sourceCode, String className, ClassLoader classLoader) throws Exception;
 }
