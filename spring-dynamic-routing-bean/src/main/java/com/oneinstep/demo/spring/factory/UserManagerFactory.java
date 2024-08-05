@@ -1,9 +1,9 @@
 package com.oneinstep.demo.spring.factory;
 
 import com.oneinstep.demo.spring.manager.UserManager;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

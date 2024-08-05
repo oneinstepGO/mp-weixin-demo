@@ -1,4 +1,4 @@
-package com.oneinstep.spi.core;
+package com.oneinstep.myspi.core;
 
 /**
  * SPI 扩展注入器

@@ -1,4 +1,4 @@
-package com.oneinstep.spi.core;
+package com.oneinstep.myspi.core;
 
 import lombok.Getter;
 import lombok.Setter;

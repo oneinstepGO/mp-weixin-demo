@@ -1,8 +1,8 @@
-package com.oneinstep.spi.demo;
+package com.oneinstep.myspi.extend;
 
-import com.oneinstep.spi.core.Adaptive;
-import com.oneinstep.spi.core.SPI;
-import com.oneinstep.spi.core.URL;
+import com.oneinstep.myspi.core.Adaptive;
+import com.oneinstep.myspi.core.SPI;
+import com.oneinstep.myspi.core.URL;
 
 /**
  * 注册中心工厂接口

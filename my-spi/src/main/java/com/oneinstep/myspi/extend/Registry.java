@@ -1,6 +1,6 @@
-package com.oneinstep.spi.demo;
+package com.oneinstep.myspi.extend;
 
-import com.oneinstep.spi.core.URL;
+import com.oneinstep.myspi.core.URL;
 
 /**
  * 注册中心接口

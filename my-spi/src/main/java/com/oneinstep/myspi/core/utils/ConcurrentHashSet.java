@@ -1,4 +1,4 @@
-package com.oneinstep.spi.core.utils;
+package com.oneinstep.myspi.core.utils;
 
 import java.io.Serial;
 import java.io.Serializable;

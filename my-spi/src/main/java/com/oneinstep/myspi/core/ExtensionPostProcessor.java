@@ -1,4 +1,4 @@
-package com.oneinstep.spi.core;
+package com.oneinstep.myspi.core;
 
 /**
  * 扩展点后置处理器接口

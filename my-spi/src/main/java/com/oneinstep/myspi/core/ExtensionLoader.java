@@ -1,12 +1,12 @@
 /*
  *
  */
-package com.oneinstep.spi.core;
+package com.oneinstep.myspi.core;
 
-import com.oneinstep.spi.core.utils.ClassLoaderResourceLoader;
-import com.oneinstep.spi.core.utils.ClassUtils;
-import com.oneinstep.spi.core.utils.ConcurrentHashSet;
-import com.oneinstep.spi.core.utils.Holder;
+import com.oneinstep.myspi.core.utils.ClassLoaderResourceLoader;
+import com.oneinstep.myspi.core.utils.ClassUtils;
+import com.oneinstep.myspi.core.utils.ConcurrentHashSet;
+import com.oneinstep.myspi.core.utils.Holder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -49,7 +49,7 @@ public class ExtensionLoader<T> {
     private static final Pattern NAME_SEPARATOR = Pattern.compile("\\s*,+\\s*");
 
     /**
-     * SPI 实现类实例缓存
+     * 缓存的扩展点实例
      */
     private final ConcurrentMap<Class<?>, Object> extensionInstances = new ConcurrentHashMap<>(64);
 
@@ -135,6 +135,26 @@ public class ExtensionLoader<T> {
         return instance;
     }
 
+    public static List<String> getAllExtensionLoaderTypes() {
+        List<String> names = new ArrayList<>();
+        EXTENSION_LOADERS_MAP.forEach((type, loader) -> names.add(type.getName()));
+        return names;
+    }
+
+    public List<String> getCachedClassesName() {
+        Map<String, Class<?>> classMap = cachedClasses.get();
+        if (classMap == null) {
+            return Collections.emptyList();
+        }
+        return new ArrayList<>(classMap.keySet());
+    }
+
+    public List<String> getExtensionInstances() {
+        List<String> instances = new ArrayList<>();
+        extensionInstances.forEach((clazz, instance) -> instances.add("{Class: " + clazz.getSimpleName() + ", hashCode: " + instances.hashCode() + "}"));
+        return instances;
+    }
+
     /**
      * 销毁 ExtensionLoader
      */
@@ -182,6 +202,7 @@ public class ExtensionLoader<T> {
         // 3. create it
         if (loader == null) {
             checkDestroyed();
+            log.info("createExtensionLoader: {}", type);
             EXTENSION_LOADERS_MAP.putIfAbsent(type, new ExtensionLoader<>(type));
             loader = (ExtensionLoader<T>) EXTENSION_LOADERS_MAP.get(type);
             return loader;
@@ -257,7 +278,7 @@ public class ExtensionLoader<T> {
                 extensionInstances.putIfAbsent(clazz, clazz.getDeclaredConstructor().newInstance());
                 instance = (T) extensionInstances.get(clazz);
                 instance = postProcessBeforeInitialization(instance, name);
-                injectExtension(instance);
+//                injectExtension(instance);
                 instance = postProcessAfterInitialization(instance, name);
             }
 
@@ -546,7 +567,7 @@ public class ExtensionLoader<T> {
         try {
             T instance = (T) getAdaptiveExtensionClass().getDeclaredConstructor().newInstance();
             instance = postProcessBeforeInitialization(instance, null);
-            injectExtension(instance);
+//            injectExtension(instance);
             instance = postProcessAfterInitialization(instance, null);
             return instance;
         } catch (Exception e) {

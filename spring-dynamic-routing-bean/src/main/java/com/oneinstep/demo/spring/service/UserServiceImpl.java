@@ -2,9 +2,9 @@ package com.oneinstep.demo.spring.service;
 
 import com.oneinstep.demo.spring.dto.User;
 import com.oneinstep.demo.spring.manager.UserManager;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 
 /**
  * 用户查询接口 实现类

@@ -1,4 +1,4 @@
-package com.oneinstep.spi.core.utils;
+package com.oneinstep.myspi.core.utils;
 
 /**
  * 并发安全的 Holder

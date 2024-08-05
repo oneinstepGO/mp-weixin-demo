@@ -1,16 +1,16 @@
 package com.oneinstep;
 
-import com.oneinstep.spi.core.ExtensionLoader;
-import com.oneinstep.spi.core.URL;
-import com.oneinstep.spi.demo.MyExtensionPostProcessor;
-import com.oneinstep.spi.demo.Registry;
-import com.oneinstep.spi.demo.RegistryFactory;
+import com.oneinstep.myspi.core.ExtensionLoader;
+import com.oneinstep.myspi.core.URL;
+import com.oneinstep.myspi.extend.MyExtensionPostProcessor;
+import com.oneinstep.myspi.extend.Registry;
+import com.oneinstep.myspi.extend.RegistryFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * dubbo spi 测试类
+ * 演示 dubbo SPI 的使用
  */
 public class MySpiTest {
 
@@ -18,11 +18,15 @@ public class MySpiTest {
         // 获取扩展点加载器
         ExtensionLoader<RegistryFactory> extensionLoader = ExtensionLoader.getExtensionLoader(RegistryFactory.class);
 
+        System.out.println("AllExtensionLoaderTypes = " + ExtensionLoader.getAllExtensionLoaderTypes() +
+                ", CachedClassesNames = " + extensionLoader.getCachedClassesName() + ", ExtensionInstances = " + extensionLoader.getExtensionInstances());
         // 添加扩展点处理器
         extensionLoader.addExtensionPostProcessor(new MyExtensionPostProcessor());
 
         // 获取自适应扩展点
         RegistryFactory registryFactory = extensionLoader.getAdaptiveExtension();
+        System.out.println("AllExtensionLoaderTypes = " + ExtensionLoader.getAllExtensionLoaderTypes() +
+                ", CachedClassesNames = " + extensionLoader.getCachedClassesName() + ", ExtensionInstances = " + extensionLoader.getExtensionInstances());
 
         Map<String, String> urlParams = new HashMap<>();
         urlParams.put("application", "my-spi");
@@ -39,11 +43,17 @@ public class MySpiTest {
         // 将服务注册到 zookeeper 注册中心
         zkRegistry.register(serviceUrl);
 
+        System.out.println("AllExtensionLoaderTypes = " + ExtensionLoader.getAllExtensionLoaderTypes() +
+                ", CachedClassesNames = " + extensionLoader.getCachedClassesName() + ", ExtensionInstances = " + extensionLoader.getExtensionInstances());
+
         URL nacosUrl = new URL("nacos", "127.0.0.1", 8848, "com.demo.RegistryService", urlParams);
         // 获取 nacos 注册中心
         Registry nacosRegistry = registryFactory.getRegistry(nacosUrl);
         // 将服务注册到 nacos 注册中心
         nacosRegistry.register(serviceUrl);
+
+        System.out.println("AllExtensionLoaderTypes = " + ExtensionLoader.getAllExtensionLoaderTypes() +
+                ", CachedClassesNames = " + extensionLoader.getCachedClassesName() + ", ExtensionInstances = " + extensionLoader.getExtensionInstances());
 
 
         System.out.println("=====================================");
@@ -55,6 +65,13 @@ public class MySpiTest {
         // 将服务注册到 zookeeper 注册中心
         zookeeperRegistry.register(serviceUrl);
 
+        System.out.println("AllExtensionLoaderTypes = " + ExtensionLoader.getAllExtensionLoaderTypes() +
+                ", CachedClassesNames = " + extensionLoader.getCachedClassesName() + ", ExtensionInstances = " + extensionLoader.getExtensionInstances());
+        System.out.println("all extension in system is  = " + ExtensionLoader.getAllExtensionLoaderTypes());
+
         ExtensionLoader.destroy();
+        System.out.println("AllExtensionLoaderTypes = " + ExtensionLoader.getAllExtensionLoaderTypes() +
+                ", CachedClassesNames = " + extensionLoader.getCachedClassesName() + ", ExtensionInstances = " + extensionLoader.getExtensionInstances());
+
     }
 }

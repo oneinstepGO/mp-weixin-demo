@@ -1,0 +1,3 @@
+# 文件路径: META-INF/services/com.oneinstep.jdkspi.MyService
+com.oneinstep.jdkspi.MyServiceImpl1
+com.oneinstep.jdkspi.MyServiceImpl2

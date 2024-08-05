@@ -1,6 +1,6 @@
-package com.oneinstep.spi.core;
+package com.oneinstep.myspi.core;
 
-import com.oneinstep.spi.core.utils.ClassUtils;
+import com.oneinstep.myspi.core.utils.ClassUtils;
 
 import javax.tools.*;
 import java.io.*;

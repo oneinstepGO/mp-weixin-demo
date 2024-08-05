@@ -2,13 +2,12 @@ package com.oneinstep.demo.spring;
 
 import com.oneinstep.demo.spring.config.AppConfig;
 import com.oneinstep.demo.spring.manager.UserManager;
+import jakarta.annotation.Resource;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoUniqueBeanDefinitionException;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import javax.annotation.Resource;
 
 /**
  * @author aaron.shaw
