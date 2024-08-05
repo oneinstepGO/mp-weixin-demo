@@ -1,0 +1,3 @@
+# src/main/resources/META-INF/spi/com.oneinstep.myspi.demo.RegistryFactory 文件内容
+zookeeper=com.oneinstep.myspi.demo.ZookeeperRegistryFactory
+nacos=com.oneinstep.myspi.demo.NacosRegistryFactory

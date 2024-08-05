@@ -1,4 +1,4 @@
-package com.oneinstep.myspi.extend;
+package com.oneinstep.myspi.demo;
 
 import com.oneinstep.myspi.core.Adaptive;
 import com.oneinstep.myspi.core.SPI;

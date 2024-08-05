@@ -1,4 +1,4 @@
-package com.oneinstep.myspi.core;
+package com.oneinstep.myspi.core.inject;
 
 
 /**

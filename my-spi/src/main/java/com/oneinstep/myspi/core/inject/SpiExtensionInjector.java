@@ -1,4 +1,7 @@
-package com.oneinstep.myspi.core;
+package com.oneinstep.myspi.core.inject;
+
+import com.oneinstep.myspi.core.ExtensionLoader;
+import com.oneinstep.myspi.core.SPI;
 
 /**
  * SPI 扩展注入器

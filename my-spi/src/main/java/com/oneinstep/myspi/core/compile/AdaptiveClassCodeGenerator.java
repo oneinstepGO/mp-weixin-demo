@@ -1,5 +1,8 @@
-package com.oneinstep.myspi.core;
+package com.oneinstep.myspi.core.compile;
 
+import com.oneinstep.myspi.core.Adaptive;
+import com.oneinstep.myspi.core.ExtensionLoader;
+import com.oneinstep.myspi.core.URL;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
@@ -89,7 +92,9 @@ public class AdaptiveClassCodeGenerator {
             code.append(generateMethod(method));
         }
         code.append('}');
-        log.info("generate adaptive class code: \n{}", code);
+        System.out.println("========================= generate adaptive class code start =========================");
+        System.out.println(code);
+        System.out.println("========================= generate adaptive class code end =========================");
         return code.toString();
     }
 

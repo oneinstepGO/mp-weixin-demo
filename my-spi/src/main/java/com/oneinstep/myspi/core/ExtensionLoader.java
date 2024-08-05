@@ -3,6 +3,10 @@
  */
 package com.oneinstep.myspi.core;
 
+import com.oneinstep.myspi.core.compile.AdaptiveClassCodeGenerator;
+import com.oneinstep.myspi.core.compile.JdkCompiler;
+import com.oneinstep.myspi.core.inject.ExtensionInjector;
+import com.oneinstep.myspi.core.inject.SpiExtensionInjector;
 import com.oneinstep.myspi.core.utils.ClassLoaderResourceLoader;
 import com.oneinstep.myspi.core.utils.ClassUtils;
 import com.oneinstep.myspi.core.utils.ConcurrentHashSet;
@@ -83,7 +87,10 @@ public class ExtensionLoader<T> {
     private static SoftReference<Map<java.net.URL, List<String>>> urlListMapCache =
             new SoftReference<>(new ConcurrentHashMap<>());
 
-    private static final String SPI_DIRECTORY = "META-INF/spi/";
+    /**
+     * SPI 目录
+     */
+    private static final String SPI_DIRECTORY = "META-INF/my-spi/";
 
     /**
      * 记录不可接受的异常
@@ -137,7 +144,7 @@ public class ExtensionLoader<T> {
 
     public static List<String> getAllExtensionLoaderTypes() {
         List<String> names = new ArrayList<>();
-        EXTENSION_LOADERS_MAP.forEach((type, loader) -> names.add(type.getName()));
+        EXTENSION_LOADERS_MAP.forEach((type, loader) -> names.add(type.getSimpleName()));
         return names;
     }
 

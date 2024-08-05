@@ -1,4 +1,4 @@
-package com.oneinstep.myspi.core;
+package com.oneinstep.myspi.core.compile;
 
 import com.oneinstep.myspi.core.utils.ClassUtils;
 
@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 /**
  * JDK 代码编译器
  */
-public class JdkCompiler {
+public class JdkCompiler implements Compiler {
 
     private static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+([$_a-zA-Z][$_a-zA-Z0-9.]*);");
     private static final Pattern CLASS_PATTERN = Pattern.compile("class\\s+([$_a-zA-Z][$_a-zA-Z0-9]*)\\s+");
@@ -77,6 +77,7 @@ public class JdkCompiler {
      * @param classLoader 类加载器
      * @return 类
      */
+    @Override
     public Class<?> compile(String sourceCode, ClassLoader classLoader) {
         sourceCode = sourceCode.trim();
         String name = getClassName(sourceCode);
