@@ -1,4 +1,4 @@
-package com.oneinstep;
+package com.oneinstep.myspi;
 
 import com.oneinstep.myspi.core.ExtensionLoader;
 import com.oneinstep.myspi.core.URL;

@@ -64,7 +64,7 @@ public class ServiceRegistry {
      * Discover the service from ZooKeeper
      *
      * @param serviceName service name
-     * @param version
+     * @param version     service version
      * @return service address
      * @throws Exception exception
      */
@@ -73,7 +73,7 @@ public class ServiceRegistry {
         List<String> addressList;
         try {
             addressList = client.getChildren().forPath(servicePath);
-        }catch (org.apache.zookeeper.KeeperException ke) {
+        } catch (org.apache.zookeeper.KeeperException ke) {
             throw new ServiceNotFoundException("Service not found: " + serviceName + " version: " + version);
         }
         if (addressList == null || addressList.isEmpty()) {

@@ -1,6 +1,5 @@
-package com.oneinstep;
+package com.oneinstep.jdkspi;
 
-import com.oneinstep.jdkspi.MyService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ServiceLoader;
