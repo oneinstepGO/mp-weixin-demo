@@ -8,4 +8,13 @@ import java.lang.annotation.*;
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface RpcReference {}
+public @interface RpcReference {
+
+    /**
+     * service version
+     *
+     * @return service version
+     */
+    String version() default "DEFAULT";
+
+}

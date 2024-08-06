@@ -1,6 +1,7 @@
 package com.oneinstep.myrpc.core.client;
 
 import com.oneinstep.myrpc.core.dto.RpcResponse;
+import com.oneinstep.myrpc.core.exception.RpcException;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +38,7 @@ public class RpcClientHandler extends SimpleChannelInboundHandler<RpcResponse> {
             String error = response.getError();
             // 如果错误信息不为空，说明调用过程中出现了错误
             if (error != null && !error.isEmpty()) {
-                future.completeExceptionally(new RuntimeException(error));
+                future.completeExceptionally(new RpcException(error));
             }
             // 否则，说明调用过程正常，将结果返回给调用方
             else {

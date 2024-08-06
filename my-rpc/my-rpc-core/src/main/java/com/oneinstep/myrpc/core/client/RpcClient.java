@@ -4,6 +4,7 @@ import com.oneinstep.myrpc.core.codec.RpcDecoder;
 import com.oneinstep.myrpc.core.codec.RpcEncoder;
 import com.oneinstep.myrpc.core.dto.RpcRequest;
 import com.oneinstep.myrpc.core.dto.RpcResponse;
+import com.oneinstep.myrpc.core.exception.RpcException;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -15,26 +16,29 @@ import java.util.concurrent.ExecutionException;
 
 /**
  * RPC client
- * send request to server and get response
+ * 发送 RPC 请求，处理 RPC 响应
  */
 @Slf4j
 public class RpcClient {
 
+    private final String host;
+    private final int port;
+    private EventLoopGroup group;
+    private Channel channel;
+
+    public RpcClient(String host, int port) {
+        this.host = host;
+        this.port = port;
+        initialize();
+    }
+
     /**
-     * Send RPC request
-     *
-     * @param request request object
-     * @param host    server host
-     * @param port    server port
-     * @return response object
-     * @throws InterruptedException exception
+     * 初始化 Netty 客户端
      */
-    public RpcResponse send(RpcRequest request, String host, int port) throws InterruptedException {
-        // 创建并初始化 Netty 客户端 Bootstrap 对象
-        EventLoopGroup group = new NioEventLoopGroup();
+    private void initialize() {
+        group = new NioEventLoopGroup();
         try {
             Bootstrap bootstrap = new Bootstrap();
-            // 设置 EventLoopGroup、channel 类型、连接地址、处理器
             bootstrap.group(group)
                     .channel(NioSocketChannel.class)
                     .option(ChannelOption.TCP_NODELAY, true)
@@ -51,30 +55,57 @@ public class RpcClient {
                         }
                     });
 
-            // 将 requestId 和响应对象的映射关系存入 CompletableFuture
-            CompletableFuture<RpcResponse> completableFuture = RpcClientHandler.addResponse(request.getRequestId());
             // 连接服务器
             ChannelFuture future = bootstrap.connect(host, port).sync();
-            // 写入 RPC 请求数据
-            future.channel().writeAndFlush(request).sync();
-            log.info("Sent RPC request to {}:{}", host, port);
-            // 从 RpcClientHandler 获取响应
-            try {
-                return completableFuture.get();
-            } catch (ExecutionException e) {
-                log.error("RPC request failed", e);
-                if (e.getCause() instanceof RuntimeException runtimeException) {
-                    throw runtimeException;
-                } else {
-                    throw new RuntimeException(e.getCause());
-                }
+            channel = future.channel();
+            log.info("Connected to {}:{}", host, port);
+        } catch (InterruptedException e) {
+            log.error("Failed to connect to {}:{}", host, port, e);
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /**
+     * 发送 RPC 请求
+     *
+     * @param request RPC 请求
+     * @return RPC 响应
+     * @throws InterruptedException exception
+     */
+    public RpcResponse send(RpcRequest request) throws InterruptedException {
+        // 将 requestId 和响应对象的映射关系存入 CompletableFuture
+        CompletableFuture<RpcResponse> completableFuture = RpcClientHandler.addResponse(request.getRequestId());
+        // 写入 RPC 请求数据
+        channel.writeAndFlush(request).sync();
+        log.info("Sent RPC request to {}:{}", host, port);
+        // 从 RpcClientHandler 获取响应
+        try {
+            return completableFuture.get();
+        } catch (ExecutionException e) {
+            log.error("RPC request failed", e);
+            if ((e.getCause() instanceof RpcException rpcException)) {
+                throw rpcException;
+            } else if (e.getCause() instanceof RuntimeException runtimeException) {
+                throw runtimeException;
+            } else {
+                throw new RpcException("RPC request failed, cause: " + e.getCause().getMessage());
             }
         } finally {
-            // 关闭 EventLoopGroup
-            group.shutdownGracefully();
             // 移除 requestId 和响应对象的映射关系
             RpcClientHandler.removeResponse(request.getRequestId());
         }
     }
 
+    /**
+     * 关闭连接
+     */
+    public void close() {
+        if (channel != null) {
+            channel.close();
+        }
+        if (group != null) {
+            group.shutdownGracefully();
+        }
+        log.info("Connection to {}:{} closed", host, port);
+    }
 }

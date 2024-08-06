@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentMap;
 
 /**
@@ -42,7 +43,8 @@ public class RpcServerHandler extends SimpleChannelInboundHandler<RpcRequest> {
             Object result = handleRequest(request);
             rpcResponse.setResult(result);
         } catch (Exception e) {
-            rpcResponse.setError(e.getMessage());
+            Throwable cause = e.getCause();
+            rpcResponse.setError(Objects.requireNonNullElse(cause, e).toString());
             log.error("RPC Server handle request error", e);
         }
 

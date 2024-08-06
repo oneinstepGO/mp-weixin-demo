@@ -1,7 +1,7 @@
 package com.oneinstep.myrpc.core.client;
 
 import com.oneinstep.myrpc.core.annotation.RpcReference;
-import com.oneinstep.myrpc.core.registry.ServiceRegistry;
+import jakarta.annotation.Resource;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.stereotype.Component;
@@ -17,13 +17,11 @@ import java.lang.reflect.Field;
 public class RpcClientProxy implements BeanPostProcessor {
 
     /**
-     * Service registry
+     * Service registry factory
      */
-    private final ServiceRegistry serviceRegistry;
+    @Resource
+    private RpcServiceProxyFactory rpcServiceProxyFactory;
 
-    public RpcClientProxy(ServiceRegistry serviceRegistry) {
-        this.serviceRegistry = serviceRegistry;
-    }
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
@@ -36,8 +34,13 @@ public class RpcClientProxy implements BeanPostProcessor {
         Field[] fields = bean.getClass().getDeclaredFields();
         for (Field field : fields) {
             if (field.isAnnotationPresent(RpcReference.class)) {
+                RpcReference annotation = field.getAnnotation(RpcReference.class);
+                String version = annotation.version();
+                if (version == null || version.isEmpty()) {
+                    version = "DEFAULT";
+                }
                 // Create a proxy for the field
-                Object proxy = new RpcServiceProxy(serviceRegistry).createProxy(field.getType());
+                Object proxy = rpcServiceProxyFactory.createProxy(field.getType(), version);
                 // Set the field to be accessible
                 field.setAccessible(true);
                 // Set the proxy object to the field

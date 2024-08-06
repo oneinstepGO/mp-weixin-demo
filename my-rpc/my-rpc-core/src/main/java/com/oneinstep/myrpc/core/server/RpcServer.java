@@ -71,14 +71,17 @@ public class RpcServer implements ApplicationListener<ContextRefreshedEvent> {
 
         log.info("Registering services...");
         for (Object serviceBean : serviceBeanMap.values()) {
-            String interfaceName = serviceBean.getClass().getAnnotation(RpcService.class).value().getName();
+            RpcService annotation = serviceBean.getClass().getAnnotation(RpcService.class);
+            Class<?> aClass = annotation.value();
+            String interfaceName = aClass.getName();
+            String version = annotation.version();
             try {
                 // Register the service to ZooKeeper
                 // get the service address
                 InetAddress inetAddress = InetAddress.getLocalHost();
                 String ipAddress = inetAddress.getHostAddress();
                 log.info("本机IP地址: {}", ipAddress);
-                serviceRegistry.register(interfaceName, ipAddress + ":" + bindPort);
+                serviceRegistry.register(interfaceName, version, ipAddress + ":" + bindPort);
                 // Store the service name and corresponding service object
                 handlerMap.putIfAbsent(interfaceName, serviceBean);
                 log.info("Registered service: {}", interfaceName);

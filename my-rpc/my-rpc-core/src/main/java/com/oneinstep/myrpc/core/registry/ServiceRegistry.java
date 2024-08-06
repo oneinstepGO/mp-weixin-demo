@@ -1,5 +1,6 @@
 package com.oneinstep.myrpc.core.registry;
 
+import com.oneinstep.myrpc.core.exception.ServiceNotFoundException;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
@@ -45,16 +46,17 @@ public class ServiceRegistry {
      * Register the service to ZooKeeper
      *
      * @param serviceName    service name
+     * @param version        service version
      * @param serviceAddress service address
      * @throws Exception exception
      */
-    public void register(String serviceName, String serviceAddress) throws Exception {
+    public void register(String serviceName, String version, String serviceAddress) throws Exception {
         String servicePath = "/my-rpc/" + serviceName;
         // Create a ephemeral sequential node, When the connection is closed, the node will be deleted automatically
         // The node name is like: /my-rpc/com.oneinstep.myrpc.api.ExampleService/address-0000000001
         client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL_SEQUENTIAL)
-                .forPath(servicePath + "/address-", serviceAddress.getBytes());
-        log.info("Service registered: {} at {}", serviceName, serviceAddress);
+                .forPath(servicePath + "/" + version + "/" + "address-", serviceAddress.getBytes());
+        log.info("Service registered: service:{},version:{} => {}", serviceName, version, serviceAddress);
     }
 
 
@@ -62,15 +64,21 @@ public class ServiceRegistry {
      * Discover the service from ZooKeeper
      *
      * @param serviceName service name
+     * @param version
      * @return service address
      * @throws Exception exception
      */
-    public String discover(String serviceName) throws Exception {
-        String servicePath = "/my-rpc/" + serviceName;
-        List<String> addressList = client.getChildren().forPath(servicePath);
+    public String discover(String serviceName, String version) throws Exception {
+        String servicePath = "/my-rpc/" + serviceName + "/" + version;
+        List<String> addressList;
+        try {
+            addressList = client.getChildren().forPath(servicePath);
+        }catch (org.apache.zookeeper.KeeperException ke) {
+            throw new ServiceNotFoundException("Service not found: " + serviceName + " version: " + version);
+        }
         if (addressList == null || addressList.isEmpty()) {
             log.error("Service not found: {}", serviceName);
-            throw new RuntimeException("Service not found: " + serviceName);
+            throw new ServiceNotFoundException("Service not found: " + serviceName + " version: " + version);
         }
         log.info("Service discovered: {}", addressList);
         // 随机获取一个服务地址

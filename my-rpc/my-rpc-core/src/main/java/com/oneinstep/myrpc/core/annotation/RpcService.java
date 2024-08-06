@@ -18,4 +18,11 @@ public @interface RpcService {
      * @return service interface
      */
     Class<?> value();
+
+    /**
+     * service version
+     *
+     * @return service version
+     */
+    String version() default "DEFAULT";
 }
