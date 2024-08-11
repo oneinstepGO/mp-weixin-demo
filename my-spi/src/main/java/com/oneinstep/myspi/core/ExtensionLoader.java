@@ -289,7 +289,7 @@ public class ExtensionLoader<T> {
                 extensionInstances.putIfAbsent(clazz, clazz.getDeclaredConstructor().newInstance());
                 instance = (T) extensionInstances.get(clazz);
                 instance = postProcessBeforeInitialization(instance, name);
-//                injectExtension(instance);
+                injectExtension(instance);
                 instance = postProcessAfterInitialization(instance, name);
             }
 
@@ -578,7 +578,7 @@ public class ExtensionLoader<T> {
         try {
             T instance = (T) getAdaptiveExtensionClass().getDeclaredConstructor().newInstance();
             instance = postProcessBeforeInitialization(instance, null);
-//            injectExtension(instance);
+            injectExtension(instance);
             instance = postProcessAfterInitialization(instance, null);
             return instance;
         } catch (Exception e) {

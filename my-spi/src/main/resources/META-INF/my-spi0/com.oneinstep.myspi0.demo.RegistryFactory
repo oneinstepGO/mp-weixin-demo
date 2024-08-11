@@ -1,0 +1,2 @@
+zookeeper=com.oneinstep.myspi0.demo.ZookeeperRegistryFactory
+nacos=com.oneinstep.myspi0.demo.NacosRegistryFactory
