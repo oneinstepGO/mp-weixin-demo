@@ -12,7 +12,7 @@ import java.util.*;
 /**
  * JDK 代码编译器
  */
-public class JdkCodeCompiler extends AbsCodeCompiler {
+public class JdkCompiler extends AbstractCompiler {
 
     // 编译器
     private final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
@@ -25,11 +25,11 @@ public class JdkCodeCompiler extends AbsCodeCompiler {
     // 默认 Java 版本
     private static final String DEFAULT_JAVA_VERSION = "17";
 
-    public JdkCodeCompiler() {
+    public JdkCompiler() {
         this(buildDefaultOptions());
     }
 
-    public JdkCodeCompiler(String javaVersion) {
+    public JdkCompiler(String javaVersion) {
         this(buildDefaultOptions(javaVersion));
     }
 
@@ -41,7 +41,7 @@ public class JdkCodeCompiler extends AbsCodeCompiler {
         return buildDefaultOptions(DEFAULT_JAVA_VERSION);
     }
 
-    public JdkCodeCompiler(List<String> options) {
+    public JdkCompiler(List<String> options) {
         this.options = new ArrayList<>(options);
         StandardJavaFileManager manager = compiler.getStandardFileManager(diagnosticCollector, null, null);
         final ClassLoader loader = Thread.currentThread().getContextClassLoader();

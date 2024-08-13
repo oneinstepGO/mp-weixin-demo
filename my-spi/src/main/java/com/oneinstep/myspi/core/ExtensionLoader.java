@@ -5,7 +5,7 @@ package com.oneinstep.myspi.core;
 
 import com.oneinstep.myspi.core.compile.AdaptiveClassCodeGenerator;
 import com.oneinstep.myspi.core.compile.CodeCompiler;
-import com.oneinstep.myspi.core.compile.JavassistCodeCompiler;
+import com.oneinstep.myspi.core.compile.JavassistCompiler;
 import com.oneinstep.myspi.core.inject.ExtensionInjector;
 import com.oneinstep.myspi.core.inject.SpiExtensionInjector;
 import com.oneinstep.myspi.core.utils.ClassLoaderResourceLoader;
@@ -111,7 +111,7 @@ public class ExtensionLoader<T> {
     /**
      * 编译器
      */
-    private static final CodeCompiler CODE_COMPILER = new JavassistCodeCompiler();
+    private static final CodeCompiler CODE_COMPILER = new JavassistCompiler();
 
     ExtensionLoader(Class<?> type) {
         this.type = type;

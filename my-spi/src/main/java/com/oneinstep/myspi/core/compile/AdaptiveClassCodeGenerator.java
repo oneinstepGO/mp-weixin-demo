@@ -19,40 +19,37 @@ public class AdaptiveClassCodeGenerator {
 
     private static final String CLASS_NAME_INVOCATION = "org.apache.dubbo.rpc.Invocation";
 
-    private static final String CODE_PACKAGE = "package %s;\n\n";
+    private static final String CODE_PACKAGE = "package %s;\n";
 
-    private static final String CODE_IMPORTS = "import %s;\n\n";
+    private static final String CODE_IMPORTS = "import %s;\n";
 
-    private static final String CODE_CLASS_DECLARATION = "public class %s$Adaptive implements %s {\n\n";
+    private static final String CODE_CLASS_DECLARATION = "public class %s$Adaptive implements %s {\n";
 
-    private static final String CODE_METHOD_DECLARATION = "    public %s %s(%s) %s {\n%s    }\n\n";
+    private static final String CODE_METHOD_DECLARATION = "public %s %s(%s) %s {\n%s}\n";
 
     private static final String CODE_METHOD_ARGUMENT = "%s arg%d";
 
     private static final String CODE_METHOD_THROWS = "throws %s";
 
     private static final String CODE_UNSUPPORTED =
-            "        throw new UnsupportedOperationException(\"The method %s of interface %s is not adaptive method!\");\n";
+            "throw new UnsupportedOperationException(\"The method %s of interface %s is not adaptive method!\");\n";
 
     private static final String CODE_URL_NULL_CHECK =
-            "        if (arg%d == null) throw new IllegalArgumentException(\"url == null\");\n        %s url = arg%d;\n";
+            "if (arg%d == null) throw new IllegalArgumentException(\"url == null\");\n%s url = arg%d;\n";
 
-    private static final String CODE_EXT_NAME_ASSIGNMENT = "        String extName = %s;\n";
+    private static final String CODE_EXT_NAME_ASSIGNMENT = "String extName = %s;\n";
 
-    private static final String CODE_EXT_NAME_NULL_CHECK = "        if(extName == null) "
-            + "throw new IllegalStateException(\"Failed to get extension (%s) name from url (\" + url + \") use keys(%s)\");\n";
+    private static final String CODE_EXT_NAME_NULL_CHECK = "if(extName == null) "
+            + "throw new IllegalStateException(\"Failed to get extension (%s) name from url (\" + url.toString() + \") use keys(%s)\");\n";
 
     private static final String CODE_INVOCATION_ARGUMENT_NULL_CHECK =
-            "        if (arg%d == null) throw new IllegalArgumentException(\"invocation == null\"); "
+            "if (arg%d == null) throw new IllegalArgumentException(\"invocation == null\"); "
                     + "String methodName = arg%d.getMethodName();\n";
 
     private static final String CODE_EXTENSION_ASSIGNMENT =
-            "        %s extension = ExtensionLoader.getExtensionLoader(%s.class).getExtension(extName);\n";
-
-    private static final String CODE_GET_METHOD_PARAMETER = "url.getMethodParameter(methodName, \"%s\", \"%s\")";
+            "%s extension = (%<s)ExtensionLoader.getExtensionLoader(%s.class).getExtension(extName);\n";
 
     private static final String CODE_EXTENSION_METHOD_INVOKE_ARGUMENT = "arg%d";
-
     private static final String PROTOCOL_KEY = "protocol";
 
     private final Class<?> type;
@@ -248,7 +245,8 @@ public class AdaptiveClassCodeGenerator {
                 if (null != defaultExtName) {
                     if (!PROTOCOL_KEY.equals(value[i])) {
                         if (hasInvocation) {
-                            getNameCode = String.format(CODE_GET_METHOD_PARAMETER, value[i], defaultExtName);
+                            getNameCode = String.format(
+                                    "url.getMethodParameter(methodName, \"%s\", \"%s\")", value[i], defaultExtName);
                         } else {
                             getNameCode = String.format("url.getParameter(\"%s\", \"%s\")", value[i], defaultExtName);
                         }
@@ -260,7 +258,7 @@ public class AdaptiveClassCodeGenerator {
                     if (!PROTOCOL_KEY.equals(value[i])) {
                         if (hasInvocation) {
                             getNameCode = String.format(
-                                    CODE_GET_METHOD_PARAMETER, value[i], null);
+                                    "url.getMethodParameter(methodName, \"%s\", \"%s\")", value[i], defaultExtName);
                         } else {
                             getNameCode = String.format("url.getParameter(\"%s\")", value[i]);
                         }
@@ -285,11 +283,12 @@ public class AdaptiveClassCodeGenerator {
         return String.format(CODE_EXT_NAME_ASSIGNMENT, getNameCode);
     }
 
+
     /**
      * generate method invocation statement and return it if necessary
      */
     private String generateReturnAndInvocation(Method method) {
-        String returnStatement = method.getReturnType().equals(void.class) ? "" : "        return ";
+        String returnStatement = method.getReturnType().equals(void.class) ? "" : "return ";
 
         String args = IntStream.range(0, method.getParameters().length)
                 .mapToObj(i -> String.format(CODE_EXTENSION_METHOD_INVOKE_ARGUMENT, i))

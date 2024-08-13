@@ -49,7 +49,7 @@ public class ExtensionLoader<T> {
     /**
      * JDK编译器，用于编译自适应扩展类，还可以使用 JavassistCompiler 等其它编译器
      */
-    private static final JdkCodeCompiler CODE_COMPILER = new JdkCodeCompiler();
+    private static final JdkCompiler CODE_COMPILER = new JdkCompiler();
     /**
      * 缓存的自适应扩展类
      */

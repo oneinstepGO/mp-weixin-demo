@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 /**
  * 抽象代码编译器
  */
-public abstract class AbsCodeCompiler implements CodeCompiler {
+public abstract class AbstractCompiler implements CodeCompiler {
 
     private static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+([$_a-zA-Z][$_a-zA-Z0-9.]*);");
     private static final Pattern CLASS_PATTERN = Pattern.compile("class\\s+([$_a-zA-Z][$_a-zA-Z0-9]*)\\s+");
