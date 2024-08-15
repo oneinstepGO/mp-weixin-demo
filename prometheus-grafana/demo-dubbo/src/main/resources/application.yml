@@ -1,0 +1,38 @@
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  server:
+    port: 18082
+
+spring:
+  application:
+    name: demo-dubbo
+
+server:
+  port: 8082
+
+dubbo:
+  application:
+    name: ${spring.application.name}
+  protocol:
+    name: dubbo
+    port: -1
+  registry:
+    id: zk-registry
+    address: zookeeper://${ZK_HOST:localhost}:2181
+  metrics:
+    prometheus:
+      exporter:
+        enabled: true
+    enable-rpc: true
+    enable-threadpool: true
+    enable-metadata: true

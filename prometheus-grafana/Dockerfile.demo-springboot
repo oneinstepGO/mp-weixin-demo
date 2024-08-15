@@ -1,0 +1,16 @@
+# Stage 1: Build the application
+FROM maven:3.8.5-openjdk-17 AS build
+WORKDIR /home/app
+
+# 将整个父目录全部内容复制到 /home/app
+COPY . /home/app
+
+# 用 maven 编译项目
+RUN mvn -f /home/app/pom.xml clean package -DskipTests -pl demo-api,demo-springboot -am
+
+# Stage 2: Create the final image
+FROM openjdk:17-jdk-slim
+COPY --from=build /home/app/demo-springboot/target/demo-springboot-0.0.1-SNAPSHOT.jar /usr/local/lib/demo-springboot.jar
+EXPOSE 8081
+EXPOSE 18081
+ENTRYPOINT ["java","-jar","/usr/local/lib/demo-springboot.jar"]
