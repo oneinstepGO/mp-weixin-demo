@@ -5,12 +5,7 @@ global:
 
 # 采集配置
 scrape_configs:
-  # 采集 Spring Boot 应用的数据
-  - job_name: 'demo-springboot'
+  - job_name: 'prometheus-demo'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: [ 'demo-springboot:18081' ]
-  - job_name: 'demo-dubbo'
-    metrics_path: '/actuator/prometheus'
-    static_configs:
-      - targets: [ 'demo-dubbo:18082' ]
+      - targets: [ 'demo-springboot:18081', 'demo-dubbo:18082' ]

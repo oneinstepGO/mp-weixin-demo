@@ -36,3 +36,4 @@ dubbo:
     enable-rpc: true
     enable-threadpool: true
     enable-metadata: true
+    enable-jvm: true

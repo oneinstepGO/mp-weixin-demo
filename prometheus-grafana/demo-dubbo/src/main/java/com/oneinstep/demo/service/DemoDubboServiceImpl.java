@@ -4,13 +4,13 @@ import com.oneinstep.demo.api.DemoDubboService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboService;
 
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.Random;
 
 @Slf4j
 @DubboService
 public class DemoDubboServiceImpl implements DemoDubboService {
 
-    private static final ThreadLocalRandom RANDOM = ThreadLocalRandom.current();
+    private static final Random RANDOM = new Random();
 
     @Override
     public String sayHello(String name) {

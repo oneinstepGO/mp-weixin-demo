@@ -29,3 +29,20 @@ dubbo:
   registry:
     id: zk-registry
     address: zookeeper://${ZK_HOST:localhost}:2181
+  metrics:
+    prometheus:
+      exporter:
+        enabled: true
+    enable-rpc: true
+    enable-threadpool: true
+    enable-metadata: true
+    enable-jvm: true
+    enable-registry: true
+    aggregation:
+      enabled: true
+      enable-qps: true
+      enable-rt: true
+      enable-requst: true
+      bucket-num: 10
+      time-window: 10000
+      qps-time-window-mill-seconds: 100
