@@ -1,0 +1,19 @@
+# Stage 1: Build the application
+FROM maven:3.8.5-openjdk-17 AS build
+WORKDIR /home/app
+
+# 将整个父目录全部内容复制到 /home/app
+COPY . /home/app
+
+# 用 maven 编译项目
+RUN mvn -f /home/app/pom.xml clean package -DskipTests -pl demo-api,demo-dubbo,demo-springboot -am
+
+# Stage 2: Create the common image
+FROM openjdk:17-jdk-slim
+WORKDIR /usr/local/lib
+
+# 复制打包后的 JAR 文件到公共镜像中
+COPY --from=build /home/app/demo-dubbo/target/demo-dubbo-0.0.1-SNAPSHOT.jar ./demo-dubbo.jar
+COPY --from=build /home/app/demo-springboot/target/demo-springboot-0.0.1-SNAPSHOT.jar ./demo-springboot.jar
+
+# docker build -t myapp-common -f Dockerfile.common .

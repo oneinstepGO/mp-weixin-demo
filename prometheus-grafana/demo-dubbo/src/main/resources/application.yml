@@ -2,14 +2,18 @@ management:
   endpoints:
     web:
       exposure:
+        # 暴露所有端点
         include: '*'
   metrics:
     tags:
+      # 指定应用名称
       application: ${spring.application.name}
   prometheus:
     metrics:
       export:
+        # 开启 prometheus 监控
         enabled: true
+  # 指定端口
   server:
     port: 18082
 
@@ -31,9 +35,19 @@ dubbo:
     address: zookeeper://${ZK_HOST:localhost}:2181
   metrics:
     prometheus:
+      # 开启 prometheus 监控
       exporter:
         enabled: true
     enable-rpc: true
     enable-threadpool: true
     enable-metadata: true
     enable-jvm: true
+    enable-registry: true
+#    aggregation:
+#      enabled: true
+#      enable-qps: true
+#      enable-rt: true
+#      enable-requst: true
+#      bucket-num: 10
+#      time-window: 10000
+#      qps-time-window-mill-seconds: 100

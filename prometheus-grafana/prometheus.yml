@@ -5,7 +5,12 @@ global:
 
 # 采集配置
 scrape_configs:
+  # 采集任务名称
   - job_name: 'prometheus-demo'
+    # 采集 url
     metrics_path: '/actuator/prometheus'
+    # 采集频率
+    scrape_interval: 5s
     static_configs:
+      # 采集目标
       - targets: [ 'demo-springboot:18081', 'demo-dubbo:18082' ]

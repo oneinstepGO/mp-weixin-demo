@@ -38,11 +38,11 @@ dubbo:
     enable-metadata: true
     enable-jvm: true
     enable-registry: true
-    aggregation:
-      enabled: true
-      enable-qps: true
-      enable-rt: true
-      enable-requst: true
-      bucket-num: 10
-      time-window: 10000
-      qps-time-window-mill-seconds: 100
+#    aggregation:
+#      enabled: true
+#      enable-qps: true
+#      enable-rt: true
+#      enable-requst: true
+#      bucket-num: 10
+#      time-window: 10000
+#      qps-time-window-mill-seconds: 100
