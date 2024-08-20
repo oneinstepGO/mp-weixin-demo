@@ -13,6 +13,8 @@ management:
       export:
         # 开启 prometheus 监控
         enabled: true
+        # 指定采集频率
+        step: 5s
   # 指定端口
   server:
     port: 18082

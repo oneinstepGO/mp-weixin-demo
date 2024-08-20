@@ -10,6 +10,8 @@ management:
     metrics:
       export:
         enabled: true
+        # 指定采集频率
+        step: 5s
   server:
     port: 18081
 
