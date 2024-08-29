@@ -1,9 +1,9 @@
 package com.other.demo;
 
-import com.oneinstep.threadpool.core.DynamicThreadPoolManager;
-import com.oneinstep.threadpool.core.EnableDynamicThreadPool;
-import com.oneinstep.threadpool.core.NamedRunnable;
-import com.oneinstep.threadpool.core.support.NoSuchNamedThreadPoolException;
+import com.oneinstep.jupiter.threadpool.DynamicThreadPoolManager;
+import com.oneinstep.jupiter.threadpool.EnableDynamicThreadPool;
+import com.oneinstep.jupiter.threadpool.NamedRunnable;
+import com.oneinstep.jupiter.threadpool.support.NoSuchNamedThreadPoolException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;

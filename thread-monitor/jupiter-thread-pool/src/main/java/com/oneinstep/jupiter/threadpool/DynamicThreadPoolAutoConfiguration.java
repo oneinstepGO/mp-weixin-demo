@@ -1,0 +1,35 @@
+package com.oneinstep.jupiter.threadpool;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
+import org.apache.commons.collections4.MapUtils;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.GenericApplicationContext;
+
+import java.util.Map;
+
+@Configuration
+@EnableConfigurationProperties(DynamicThreadPoolProperties.class)
+@ConditionalOnClass(DynamicThreadPoolProperties.class)
+public class DynamicThreadPoolAutoConfiguration {
+
+    @Resource
+    private DynamicThreadPoolProperties dynamicThreadPoolProperties;
+    @Resource
+    private GenericApplicationContext applicationContext;
+
+    @PostConstruct
+    public void init() {
+        Map<String, ThreadPoolConfig> pools = dynamicThreadPoolProperties.getPools();
+        if (MapUtils.isEmpty(pools)) {
+            return;
+        }
+        pools.forEach((name, config) -> {
+            config.setPoolName(name);
+            DynamicThreadPool threadPool = new DynamicThreadPool(config);
+            applicationContext.registerBean(name, DynamicThreadPool.class, () -> threadPool, bd -> bd.setAutowireCandidate(false));
+        });
+    }
+}

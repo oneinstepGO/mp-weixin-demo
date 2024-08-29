@@ -16,7 +16,7 @@ dynamic-thread-pool:
       workQueue:
         # 队列类型, 可选 LinkedBlockingQueue, ArrayBlockingQueue, SynchronousQueue, PriorityBlockingQueue，默认为 LinkedBlockingQueue
         type: "LinkedBlockingQueue"
-        # 队列容量，默认为 512
+        # 队列容量，默认为 64
         capacity: 32
       # 拒绝策略, 可选 AbortPolicy, CallerRunsPolicy, DiscardPolicy, DiscardOldestPolicy，默认为 AbortPolicy
       policy: "AbortPolicy"
@@ -27,7 +27,7 @@ dynamic-thread-pool:
         # 监控统计滑动窗口大小，单位秒，默认为 3秒
         timeWindowSeconds: 3
         # 监控地址，默认值由全局配置 baseMonitorUrl 拼接而成
-        monitorUrl: "http://localhost:3000/d/bdvpd6xgluyo0a/e7babf-e7a88b-e6b1a0-e79b91-e68ea7?orgId=1&from=now-5m&to=now&refresh=5s&var-application=thread-monitor-demo&var-server_ip=127.0.0.1&var-thread_pool=bizThreadPool&var-task_name=All"
+        monitorUrl: "http://localhost:3000/d/bdvpd6xgluyo0a/e7babf-e7a88b-e6b1a0-e79b91-e68ea7?orgId=1&from=now-15m&to=now&refresh=5s&var-application=thread-monitor-demo&var-server_ip=127.0.0.1&var-thread_pool=bizThreadPool&var-task_name=All"
     # 可以添加多个线程池配置
     otherThreadPool:
       corePoolSize: 5
