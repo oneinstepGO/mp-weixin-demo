@@ -131,14 +131,14 @@
         <div class="form-group" id="queueUsageThresholdGroup" style="display: none;">
             <label for="queueUsageThreshold">队列使用率阈值(%):</label>
             <input type="number" class="form-control" id="queueUsageThreshold" name="adaptive.queueUsageThreshold"
-                   th:value="${threadPool.getAdaptive().getQueueUsageThreshold()()}" min="1" max="100" required
+                   th:value="${threadPool.getAdaptive().getQueueUsageThreshold()}" min="1" max="100" required
                    oninvalid="this.setCustomValidity('请输入一个在1到100之间的数值')" oninput="setCustomValidity('')"/>
             <div class="invalid-feedback">请输入一个在1到100之间的数值</div>
         </div>
         <div class="form-group" id="threadUsageThresholdGroup" style="display: none;">
             <label for="threadUsageThreshold">线程使用率阈值:</label>
             <input type="number" class="form-control" id="threadUsageThreshold" name="adaptive.threadUsageThreshold"
-                   th:value="${threadPool.getAdaptive().getThreadUsageThreshold()()}" min="1" max="100" required
+                   th:value="${threadPool.getAdaptive().getThreadUsageThreshold()}" min="1" max="100" required
                    oninvalid="this.setCustomValidity('请输入一个在1到100之间的数值')" oninput="setCustomValidity('')"/>
             <div class="invalid-feedback">请输入一个在1到100之间的数值</div>
         </div>
@@ -202,6 +202,7 @@
         const timeWindowGroup = document.getElementById('timeWindowGroup');
         const monitorUrlGroup = document.getElementById('monitorUrlGroup');
         const timeWindowInput = document.getElementById('timeWindowSeconds');
+
         if (monitorEnabled) {
             timeWindowGroup.style.display = 'block';
             monitorUrlGroup.style.display = 'block';
@@ -212,6 +213,9 @@
         } else {
             timeWindowGroup.style.display = 'none';
             monitorUrlGroup.style.display = 'none';
+
+            document.getElementById('adaptiveEnabled').checked = false;
+
         }
     }
 

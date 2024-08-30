@@ -456,13 +456,13 @@ public class DynamicThreadPoolManager {
             // 只有开启了监控，才能开启自适应
             if (dynamicThreadPool.getThreadPoolConfig().getMonitor() == null || !dynamicThreadPool.getThreadPoolConfig().getMonitor().getEnabled()) {
                 log.error("Switch adaptive failed, monitor is disabled");
-                throw new IllegalArgumentException("monitor is disabled");
+                throw new IllegalArgumentException("monitor is disabled, please enable monitor first");
             }
             AdaptiveConfig newAdaptiveConfig = getNewAdaptiveConfig(enabled);
             dynamicThreadPool.updateAdaptive(newAdaptiveConfig);
             log.info("Switch adaptive success, pool: {}, enable: {}", poolName, param.enableAdaptive());
         } else {
-            log.error("Switch adaptive failed, adaptive is disabled");
+            log.error("Switch adaptive failed, global adaptive is disabled");
         }
 
     }

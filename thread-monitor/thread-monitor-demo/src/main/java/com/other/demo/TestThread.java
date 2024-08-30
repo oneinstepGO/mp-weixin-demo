@@ -55,7 +55,7 @@ public class TestThread extends Thread {
                     // ignore
                 }
             } catch (Exception e) {
-                log.error("Failed to execute task", e);
+//                log.error("Failed to execute task", e);
             }
         }
     }

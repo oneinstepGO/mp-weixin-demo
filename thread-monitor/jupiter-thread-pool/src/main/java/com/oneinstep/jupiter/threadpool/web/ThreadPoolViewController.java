@@ -1,5 +1,6 @@
-package com.oneinstep.jupiter.threadpool;
+package com.oneinstep.jupiter.threadpool.web;
 
+import com.oneinstep.jupiter.threadpool.DynamicThreadPoolManager;
 import com.oneinstep.jupiter.threadpool.config.ThreadPoolConfig;
 import com.oneinstep.jupiter.threadpool.support.NoSuchNamedThreadPoolException;
 import com.oneinstep.jupiter.threadpool.support.SwitchAdaptiveParam;

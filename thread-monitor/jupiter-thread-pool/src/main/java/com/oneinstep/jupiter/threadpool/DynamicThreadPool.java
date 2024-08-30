@@ -178,6 +178,8 @@ public class DynamicThreadPool extends ThreadPoolExecutor {
             }
         } else {
             disableMonitor(oldMonitorConfig);
+            // 关闭监控时，自适应配置也要关闭
+            this.threadPoolConfig.getAdaptive().setEnabled(false);
         }
     }
 
@@ -212,7 +214,6 @@ public class DynamicThreadPool extends ThreadPoolExecutor {
         this.getThreadPoolConfig().getAdaptive().setQueueUsageThreshold(newAdaptiveConfig.getQueueUsageThreshold());
         this.getThreadPoolConfig().getAdaptive().setThreadUsageThreshold(newAdaptiveConfig.getThreadUsageThreshold());
         this.getThreadPoolConfig().getAdaptive().setWaitTimeThresholdMs(newAdaptiveConfig.getWaitTimeThresholdMs());
-
     }
 
 
