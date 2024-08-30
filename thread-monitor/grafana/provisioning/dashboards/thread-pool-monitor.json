@@ -1122,6 +1122,26 @@
         {
           "datasource": "Prometheus-Thread-Monitor",
           "editorMode": "code",
+          "expr": "thread_pool_delta_task_count{application=\"$application\", instance=\"$instance\", pool_name=\"$thread_pool\"}",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "提交任务数",
+          "range": true,
+          "refId": "提交任务数"
+        },
+        {
+          "datasource": "Prometheus-Thread-Monitor",
+          "editorMode": "code",
+          "expr": "thread_pool_delta_completed_task_count{application=\"$application\", instance=\"$instance\", pool_name=\"$thread_pool\"}",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "完成任务数",
+          "range": true,
+          "refId": "完成任务数"
+        },
+        {
+          "datasource": "Prometheus-Thread-Monitor",
+          "editorMode": "code",
           "expr": "sum(task_total_count_qps{application=\"$application\", instance=\"$instance\", pool_name=\"$thread_pool\"})",
           "hide": false,
           "instant": false,
@@ -1335,9 +1355,19 @@
           "expr": "task_rt{application=\"$application\", instance=\"$instance\", pool_name=\"$thread_pool\", task_name=\"$task_name\"}",
           "hide": false,
           "instant": false,
-          "legendFormat": "RT",
+          "legendFormat": "平均执行时间",
           "range": true,
-          "refId": "RT"
+          "refId": "平均执行时间"
+        },
+        {
+          "datasource": "Prometheus-Thread-Monitor",
+          "editorMode": "code",
+          "expr": "task_wait_time{application=\"$application\", instance=\"$instance\", pool_name=\"$thread_pool\", task_name=\"$task_name\"}",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "平均等待时间",
+          "range": true,
+          "refId": "平均等待时间"
         }
       ],
       "title": "任务[$task_name]监控",

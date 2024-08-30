@@ -129,14 +129,14 @@
             </div>
         </div>
         <div class="form-group" id="queueUsageThresholdGroup" style="display: none;">
-            <label for="queueUsageThreshold">队列使用率阈值(%):</label>
+            <label for="queueUsageThreshold">队列使用率阈值(%)(队列大小/队列容量):</label>
             <input type="number" class="form-control" id="queueUsageThreshold" name="adaptive.queueUsageThreshold"
                    th:value="${threadPool.getAdaptive().getQueueUsageThreshold()}" min="1" max="100" required
                    oninvalid="this.setCustomValidity('请输入一个在1到100之间的数值')" oninput="setCustomValidity('')"/>
             <div class="invalid-feedback">请输入一个在1到100之间的数值</div>
         </div>
         <div class="form-group" id="threadUsageThresholdGroup" style="display: none;">
-            <label for="threadUsageThreshold">线程使用率阈值:</label>
+            <label for="threadUsageThreshold">线程使用率阈值(%)(活跃线程数/最大线程数):</label>
             <input type="number" class="form-control" id="threadUsageThreshold" name="adaptive.threadUsageThreshold"
                    th:value="${threadPool.getAdaptive().getThreadUsageThreshold()}" min="1" max="100" required
                    oninvalid="this.setCustomValidity('请输入一个在1到100之间的数值')" oninput="setCustomValidity('')"/>
@@ -215,12 +215,14 @@
             monitorUrlGroup.style.display = 'none';
 
             document.getElementById('adaptiveEnabled').checked = false;
+            toggleAdaptiveParamsWindow();
 
         }
     }
 
     function toggleAdaptiveParamsWindow() {
         const adaptiveEnabled = document.getElementById('adaptiveEnabled').checked;
+
         const onlyIncreaseGroup = document.getElementById('onlyIncreaseGroup');
         const queueUsageThresholdGroup = document.getElementById('queueUsageThresholdGroup');
         const threadUsageThresholdGroup = document.getElementById('threadUsageThresholdGroup');
@@ -258,6 +260,7 @@
             queueUsageThresholdGroup.style.display = 'none';
             threadUsageThresholdGroup.style.display = 'none';
             waitTimeThresholdMsGroup.style.display = 'none';
+
             document.getElementById('queueUsageThreshold').removeAttribute('required');
             document.getElementById('threadUsageThreshold').removeAttribute('required');
             document.getElementById('waitTimeThresholdMs').removeAttribute('required');
@@ -282,8 +285,9 @@
     }
 
     window.onload = function () {
-        toggleMonitorTimeWindow();
         toggleWorkQueueCapacity();
+        toggleMonitorTimeWindow();
+        toggleAdaptiveParamsWindow();
         addBlurEventListeners();
 
         // 保存原始的工作队列参数值
@@ -313,6 +317,27 @@
                 hiddenField.parentNode.removeChild(hiddenField);
             }
         }
+
+        // 获取复选框 adaptive.enabled
+        const checkbox2 = document.querySelector('input[name="adaptive.enabled"][type="checkbox"]');
+        // 如果复选框被选中，移除隐藏字段
+        if (checkbox2.checked) {
+            const hiddenField = document.querySelector('input[name="adaptive.enabled"][type="hidden"]');
+            if (hiddenField) {
+                hiddenField.parentNode.removeChild(hiddenField);
+            }
+        }
+
+        // 获取复选框 adaptive.onlyIncrease
+        const checkbox3 = document.querySelector('input[name="adaptive.onlyIncrease"][type="checkbox"]');
+        // 如果复选框被选中，移除隐藏字段
+        if (checkbox3.checked) {
+            const hiddenField = document.querySelector('input[name="adaptive.onlyIncrease"][type="hidden"]');
+            if (hiddenField) {
+                hiddenField.parentNode.removeChild(hiddenField);
+            }
+        }
+
 
         const newWorkQueueType = document.getElementById('workQueueType').value;
         const newWorkQueueCapacity = document.getElementById('workQueueCapacity').value;

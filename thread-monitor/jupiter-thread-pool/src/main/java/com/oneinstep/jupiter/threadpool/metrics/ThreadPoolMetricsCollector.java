@@ -32,7 +32,7 @@ public class ThreadPoolMetricsCollector {
     public ThreadPoolMetricsCollector(DynamicThreadPool threadPool) {
         this.threadPool = threadPool;
         this.meterRegistry = SpringBeanUtil.getBean(MeterRegistry.class);
-        this.timeWindowSeconds = threadPool.getThreadPoolConfig().getMonitor().getTimeWindowSeconds();
+        this.timeWindowSeconds = threadPool.getUnmodifyThreadPoolConfig().getMonitor().getTimeWindowSeconds();
         this.running = true; // 开始时设置为运行状态
         collectPool();
     }

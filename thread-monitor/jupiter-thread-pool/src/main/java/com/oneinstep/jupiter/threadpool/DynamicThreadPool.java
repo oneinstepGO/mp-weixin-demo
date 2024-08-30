@@ -68,7 +68,6 @@ public class DynamicThreadPool extends ThreadPoolExecutor {
     protected void beforeExecute(Thread t, Runnable r) {
         super.beforeExecute(t, r);
         if (!(r instanceof NamedRunnable namedRunnable)) {
-            log.warn("NamedRunnable is required, but got {}", r.getClass());
             throw new IllegalArgumentException("NamedRunnable is required");
         }
         namedRunnable.setStartTime(System.currentTimeMillis());
@@ -96,7 +95,6 @@ public class DynamicThreadPool extends ThreadPoolExecutor {
     protected void afterExecute(Runnable command, Throwable t) {
         super.afterExecute(command, t);
         if (!(command instanceof NamedRunnable namedRunnable)) {
-            log.warn("NamedRunnable is required, but got {}", command.getClass());
             throw new IllegalArgumentException("NamedRunnable is required");
         }
         namedRunnable.setEndTime(System.currentTimeMillis());
@@ -200,20 +198,20 @@ public class DynamicThreadPool extends ThreadPoolExecutor {
         }
     }
 
-    public synchronized void updateAdaptive(AdaptiveConfig newAdaptiveConfig) {
+    public synchronized void updateAdaptive(@Nonnull AdaptiveConfig newAdaptiveConfig) {
 
         // 如果AdaptiveConfig配置有变化，更新配置
-        final AdaptiveConfig oldAdaptiveConfig = this.getThreadPoolConfig().getAdaptive();
+        final AdaptiveConfig oldAdaptiveConfig = this.threadPoolConfig.getAdaptive();
         if (oldAdaptiveConfig == null) {
-            this.getThreadPoolConfig().setAdaptive(newAdaptiveConfig);
+            this.threadPoolConfig.setAdaptive(newAdaptiveConfig);
             return;
         }
 
-        this.getThreadPoolConfig().getAdaptive().setEnabled(newAdaptiveConfig.getEnabled());
-        this.getThreadPoolConfig().getAdaptive().setOnlyIncrease(newAdaptiveConfig.getOnlyIncrease());
-        this.getThreadPoolConfig().getAdaptive().setQueueUsageThreshold(newAdaptiveConfig.getQueueUsageThreshold());
-        this.getThreadPoolConfig().getAdaptive().setThreadUsageThreshold(newAdaptiveConfig.getThreadUsageThreshold());
-        this.getThreadPoolConfig().getAdaptive().setWaitTimeThresholdMs(newAdaptiveConfig.getWaitTimeThresholdMs());
+        this.threadPoolConfig.getAdaptive().setEnabled(newAdaptiveConfig.getEnabled());
+        this.threadPoolConfig.getAdaptive().setOnlyIncrease(newAdaptiveConfig.getOnlyIncrease());
+        this.threadPoolConfig.getAdaptive().setQueueUsageThreshold(newAdaptiveConfig.getQueueUsageThreshold());
+        this.threadPoolConfig.getAdaptive().setThreadUsageThreshold(newAdaptiveConfig.getThreadUsageThreshold());
+        this.threadPoolConfig.getAdaptive().setWaitTimeThresholdMs(newAdaptiveConfig.getWaitTimeThresholdMs());
     }
 
 
@@ -281,7 +279,7 @@ public class DynamicThreadPool extends ThreadPoolExecutor {
     }
 
     @Override
-    public List<Runnable> shutdownNow() {
+    public @Nonnull List<Runnable> shutdownNow() {
         List<Runnable> tasks;
         try {
             tasks = super.shutdownNow();
@@ -319,7 +317,7 @@ public class DynamicThreadPool extends ThreadPoolExecutor {
         this.threadPoolConfig.setPolicy(RejectPolicyEnum.getPolicyByClass(newHandler.getClass()).policyName());
     }
 
-    public ThreadPoolConfig getThreadPoolConfig() {
+    public ThreadPoolConfig getUnmodifyThreadPoolConfig() {
         // 为了防止外部修改配置，返回一个新的对象
         return this.threadPoolConfig.copy();
     }

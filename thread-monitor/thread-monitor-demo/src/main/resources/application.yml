@@ -33,9 +33,9 @@ dynamic-thread-pool:
         enabled: true
         # 是否只增加线程数，默认为 false
         onlyIncrease: false
-        # 队列使用率阈值，默认为 0.8
+        # 队列使用率阈值，默认为 80%
         queueUsageThreshold: 80
-        # 线程使用率阈值，默认为 0.8
+        # 线程使用率阈值，默认为 80%
         threadUsageThreshold: 50
         # 等待时间阈值，默认为 1000ms
         waitTimeThresholdMs: 300
