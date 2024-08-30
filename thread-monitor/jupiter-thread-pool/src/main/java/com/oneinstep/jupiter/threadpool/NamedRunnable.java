@@ -19,6 +19,12 @@ public class NamedRunnable implements Runnable {
     @Setter
     private long startTime;
 
+    @Setter
+    private long submitTime;
+
+    @Setter
+    private long endTime;
+
     public NamedRunnable(String name, Runnable runnable) {
         if (StringUtils.isBlank(name)) {
             throw new IllegalArgumentException("name cannot be blank");

@@ -1,4 +1,4 @@
-package com.oneinstep.jupiter.threadpool;
+package com.oneinstep.jupiter.threadpool.config;
 
 import com.oneinstep.jupiter.threadpool.support.BlockingQueueEnum;
 import lombok.Data;

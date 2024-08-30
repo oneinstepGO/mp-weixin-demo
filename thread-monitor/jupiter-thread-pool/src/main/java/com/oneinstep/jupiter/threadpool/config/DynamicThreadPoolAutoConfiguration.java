@@ -1,5 +1,6 @@
-package com.oneinstep.jupiter.threadpool;
+package com.oneinstep.jupiter.threadpool.config;
 
+import com.oneinstep.jupiter.threadpool.DynamicThreadPool;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import org.apache.commons.collections4.MapUtils;

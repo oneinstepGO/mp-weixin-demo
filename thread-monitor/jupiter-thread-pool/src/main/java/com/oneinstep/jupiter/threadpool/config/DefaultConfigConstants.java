@@ -1,4 +1,4 @@
-package com.oneinstep.jupiter.threadpool;
+package com.oneinstep.jupiter.threadpool.config;
 
 /**
  * 默认线程池配置常量
@@ -35,4 +35,14 @@ public class DefaultConfigConstants {
     // 默认的拒绝策略
     public static final String DEFAULT_POLICY = "AbortPolicy";
 
+    // 默认的是否开启自适应
+    public static final Boolean DEFAULT_ENABLE_ADAPTIVE = false;
+
+    public static final Boolean DEFAULT_ONLY_INCREASE = false;
+
+    public static final int DEFAULT_ADAPTIVE_TIME_THRESHOLD = 1000;
+
+    public static final int DEFAULT_ADAPTIVE_QUEUE_THRESHOLD = 80;
+
+    public static final int DEFAULT_ADAPTIVE_THREAD_THRESHOLD = 80;
 }

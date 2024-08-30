@@ -1,2 +1,2 @@
 org.springframework.context.ApplicationListener=\
-com.oneinstep.jupiter.threadpool.MetricsConfigLoader
+com.oneinstep.jupiter.threadpool.metrics.MetricsConfigLoader

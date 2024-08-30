@@ -1,5 +1,6 @@
-package com.oneinstep.jupiter.threadpool;
+package com.oneinstep.jupiter.threadpool.metrics;
 
+import com.oneinstep.jupiter.threadpool.config.DynamicThreadPoolProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;

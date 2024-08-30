@@ -8,6 +8,7 @@
         .modal-body-small {
             font-size: 0.9rem; /* 调整提示字体大小 */
         }
+
         .modal-title-centered {
             text-align: center; /* 标题居中 */
             width: 100%;
@@ -105,6 +106,52 @@
             <input type="url" class="form-control" id="monitorUrl" name="monitor.monitorUrl"
                    th:value="${threadPool.getMonitor().getMonitorUrl()}"/>
         </div>
+
+        <div class="form-group">
+            <label>是否开启自适应调节:</label>
+            <div class="custom-control custom-switch">
+                <!-- 隐藏字段：默认值为 false -->
+                <input type="hidden" name="adaptive.enabled" value="false"/>
+                <input type="checkbox" class="custom-control-input" id="adaptiveEnabled" name="adaptive.enabled"
+                       th:checked="${threadPool.getAdaptive().getEnabled()}" onclick="toggleAdaptiveParamsWindow()"
+                       th:value="true"/>
+                <label class="custom-control-label" for="adaptiveEnabled"></label>
+            </div>
+        </div>
+        <div class="form-group" id="onlyIncreaseGroup" style="display: none;">
+            <label>是否只增加线程:</label>
+            <div class="custom-control custom-switch">
+                <!-- 隐藏字段：默认值为 false -->
+                <input type="hidden" name="adaptive.onlyIncrease" value="false"/>
+                <input type="checkbox" class="custom-control-input" id="onlyIncrease" name="adaptive.onlyIncrease"
+                       th:checked="${threadPool.getAdaptive().getOnlyIncrease()}" th:value="true"/>
+                <label class="custom-control-label" for="onlyIncrease"></label>
+            </div>
+        </div>
+        <div class="form-group" id="queueUsageThresholdGroup" style="display: none;">
+            <label for="queueUsageThreshold">队列使用率阈值(%):</label>
+            <input type="number" class="form-control" id="queueUsageThreshold" name="adaptive.queueUsageThreshold"
+                   th:value="${threadPool.getAdaptive().getQueueUsageThreshold()()}" min="1" max="100" required
+                   oninvalid="this.setCustomValidity('请输入一个在1到100之间的数值')" oninput="setCustomValidity('')"/>
+            <div class="invalid-feedback">请输入一个在1到100之间的数值</div>
+        </div>
+        <div class="form-group" id="threadUsageThresholdGroup" style="display: none;">
+            <label for="threadUsageThreshold">线程使用率阈值:</label>
+            <input type="number" class="form-control" id="threadUsageThreshold" name="adaptive.threadUsageThreshold"
+                   th:value="${threadPool.getAdaptive().getThreadUsageThreshold()()}" min="1" max="100" required
+                   oninvalid="this.setCustomValidity('请输入一个在1到100之间的数值')" oninput="setCustomValidity('')"/>
+            <div class="invalid-feedback">请输入一个在1到100之间的数值</div>
+        </div>
+        <div class="form-group" id="waitTimeThresholdMsGroup" style="display: none;">
+            <label for="waitTimeThresholdMs">任务执行时间阈值(ms):</label>
+            <input type="number" class="form-control" id="waitTimeThresholdMs"
+                   name="adaptive.waitTimeThresholdMs"
+                   th:value="${threadPool.getAdaptive().getWaitTimeThresholdMs()}" min="10" max="10000" required
+                   oninvalid="this.setCustomValidity('请输入一个在10到10000之间的数值')"
+                   oninput="setCustomValidity('')"/>
+            <div class="invalid-feedback">请输入一个在10到10000之间的数值</div>
+        </div>
+
         <div class="form-group">
             <button type="submit" class="btn btn-primary">保存</button>
             <a href="/thread-pool" class="btn btn-secondary">取消</a>
@@ -114,7 +161,8 @@
 </div>
 
 <!-- Bootstrap 模态框 -->
-<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel"
+     aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -124,7 +172,8 @@
                 </button>
             </div>
             <div class="modal-body modal-body-small">
-                修改队列参数会<span class="text-danger">创建新的线程池</span>，旧线程池队列中的任务会被转移到新线程池，旧线程池会被<span class="text-danger">关闭</span>。
+                修改队列参数会<span class="text-danger">创建新的线程池</span>，旧线程池队列中的任务会被转移到新线程池，旧线程池会被<span
+                    class="text-danger">关闭</span>。
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
@@ -142,6 +191,12 @@
     let originalWorkQueueCapacity;
     let formSubmitted = false;
 
+    const DEFAULT_WORK_QUEUE_CAPACITY = 64;
+    const DEFAULT_TIME_WINDOW_SECONDS = 3;
+    const DEFAULT_USAGE_THRESHOLD = 80;
+    const DEFAULT_WAIT_TIME_THRESHOLD_MS = 1000;
+    const DEFAULT_ONLY_INCREASE = false;
+
     function toggleMonitorTimeWindow() {
         const monitorEnabled = document.getElementById('monitorEnabled').checked;
         const timeWindowGroup = document.getElementById('timeWindowGroup');
@@ -152,11 +207,56 @@
             monitorUrlGroup.style.display = 'block';
             // 如果监控时间窗口以前没有值，则设置默认值为3
             if (!timeWindowInput.value) {
-                timeWindowInput.value = 3;
+                timeWindowInput.value = DEFAULT_TIME_WINDOW_SECONDS;
             }
         } else {
             timeWindowGroup.style.display = 'none';
             monitorUrlGroup.style.display = 'none';
+        }
+    }
+
+    function toggleAdaptiveParamsWindow() {
+        const adaptiveEnabled = document.getElementById('adaptiveEnabled').checked;
+        const onlyIncreaseGroup = document.getElementById('onlyIncreaseGroup');
+        const queueUsageThresholdGroup = document.getElementById('queueUsageThresholdGroup');
+        const threadUsageThresholdGroup = document.getElementById('threadUsageThresholdGroup');
+        const waitTimeThresholdMsGroup = document.getElementById('waitTimeThresholdMsGroup');
+
+        const onlyIncrease = document.getElementById('onlyIncrease');
+        const queueUsageThreshold = document.getElementById('queueUsageThreshold');
+        const threadUsageThreshold = document.getElementById('threadUsageThreshold');
+        const waitTimeThresholdMs = document.getElementById('waitTimeThresholdMs');
+
+        if (adaptiveEnabled) {
+            onlyIncreaseGroup.style.display = 'block';
+            queueUsageThresholdGroup.style.display = 'block';
+            threadUsageThresholdGroup.style.display = 'block';
+            waitTimeThresholdMsGroup.style.display = 'block';
+            if (!onlyIncrease.value) {
+                onlyIncrease.value = DEFAULT_ONLY_INCREASE;
+            }
+            if (!queueUsageThreshold.value) {
+                queueUsageThreshold.value = DEFAULT_USAGE_THRESHOLD;
+            }
+            if (!threadUsageThreshold.value) {
+                threadUsageThreshold.value = DEFAULT_USAGE_THRESHOLD;
+            }
+            if (!waitTimeThresholdMs.value) {
+                waitTimeThresholdMs.value = DEFAULT_WAIT_TIME_THRESHOLD_MS;
+            }
+
+            document.getElementById('queueUsageThreshold').setAttribute('required', 'required');
+            document.getElementById('threadUsageThreshold').setAttribute('required', 'required');
+            document.getElementById('waitTimeThresholdMs').setAttribute('required', 'required');
+
+        } else {
+            onlyIncreaseGroup.style.display = 'none';
+            queueUsageThresholdGroup.style.display = 'none';
+            threadUsageThresholdGroup.style.display = 'none';
+            waitTimeThresholdMsGroup.style.display = 'none';
+            document.getElementById('queueUsageThreshold').removeAttribute('required');
+            document.getElementById('threadUsageThreshold').removeAttribute('required');
+            document.getElementById('waitTimeThresholdMs').removeAttribute('required');
         }
     }
 
@@ -172,7 +272,7 @@
             document.getElementById('workQueueCapacity').setAttribute('required', 'required');
             // 如果工作队列容量以前没有值，则设置默认值为64
             if (!workQueueCapacityInput.value) {
-                workQueueCapacityInput.value = 64;
+                workQueueCapacityInput.value = DEFAULT_WORK_QUEUE_CAPACITY;
             }
         }
     }

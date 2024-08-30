@@ -898,7 +898,7 @@
         {
           "datasource": "Prometheus-Thread-Monitor",
           "editorMode": "code",
-          "expr": "(thread_pool_active_threads{application=\"$application\", pool_name=\"$thread_pool\", instance=\"$instance\"} + thread_pool_queue_size{application=\"$application\", pool_name=\"$thread_pool\", instance=\"$instance\"})/ (thread_pool_max_pool_size{application=\"$application\", pool_name=\"$thread_pool\", instance=\"$instance\"} + thread_pool_queue_size{application=\"$application\", pool_name=\"$thread_pool\", instance=\"$instance\"} + thread_pool_queue_remaining_capacity{application=\"$application\", pool_name=\"$thread_pool\", instance=\"$instance\"}) * 100",
+          "expr": "thread_pool_active_threads{application=\"$application\", pool_name=\"$thread_pool\", instance=\"$instance\"} / thread_pool_max_pool_size{application=\"$application\", pool_name=\"$thread_pool\", instance=\"$instance\"} * 100",
           "instant": false,
           "legendFormat": "线程池负载",
           "range": true,

@@ -28,6 +28,7 @@
             <th>队列类型</th>
             <th>队列容量</th>
             <th>是否开启监控</th>
+            <th>是否开启自适应调节</th>
             <th>操作</th>
         </tr>
         </thead>
@@ -41,12 +42,23 @@
             <td>
                 <label>
                     <input type="checkbox" class="form-check-input" th:checked="${pool.getMonitor().getEnabled()}"
-                           data-toggle="switch" th:data-pool-name="${pool.getPoolName()}" onchange="toggleMonitor(this)"/>
+                           data-toggle="switch" th:data-pool-name="${pool.getPoolName()}"
+                           onchange="toggleMonitor(this)"/>
                 </label>
             </td>
             <td>
-                <a th:href="@{'/thread-pool/' + ${pool.getPoolName()}}" class="btn btn-primary btn-sm btn-spacing">编辑</a>
-                <button type="button" class="btn btn-warning btn-sm btn-spacing" th:data-pool-name="${pool.getPoolName()}" onclick="showResetModal(this)">重置</button>
+                <label>
+                    <input type="checkbox" class="form-check-input" th:checked="${pool.getAdaptive().getEnabled()}"
+                           data-toggle="switch" th:data-pool-name="${pool.getPoolName()}"
+                           onchange="toggleAdaptive(this)"/>
+                </label>
+            </td>
+            <td>
+                <a th:href="@{'/thread-pool/' + ${pool.getPoolName()}}"
+                   class="btn btn-primary btn-sm btn-spacing">编辑</a>
+                <button type="button" class="btn btn-warning btn-sm btn-spacing"
+                        th:data-pool-name="${pool.getPoolName()}" onclick="showResetModal(this)">重置
+                </button>
                 <a th:if="${pool.getMonitor().getEnabled()}" th:href="${pool.getMonitor().getMonitorUrl()}"
                    class="btn btn-info btn-sm btn-spacing" target="_blank">跳转监控</a>
             </td>
@@ -56,7 +68,8 @@
 </div>
 
 <!-- Bootstrap 模态框 -->
-<div class="modal fade" id="resetConfirmationModal" tabindex="-1" role="dialog" aria-labelledby="resetConfirmationModalLabel" aria-hidden="true">
+<div class="modal fade" id="resetConfirmationModal" tabindex="-1" role="dialog"
+     aria-labelledby="resetConfirmationModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -99,6 +112,25 @@
             data: JSON.stringify(data),
             error: function (error) {
                 console.error('Error updating monitor status:', error);
+            }
+        });
+    }
+
+    function toggleAdaptive(checkbox) {
+        const enableAdaptive = checkbox.checked;
+        const poolName = checkbox.getAttribute('data-pool-name');
+        const data = {
+            poolName: poolName,
+            enableAdaptive: enableAdaptive
+        };
+
+        $.ajax({
+            url: '/thread-pool/switchAdaptive',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            error: function (error) {
+                console.error('Error updating Adaptive status:', error);
             }
         });
     }

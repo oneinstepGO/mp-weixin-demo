@@ -1,5 +1,8 @@
 package com.oneinstep.jupiter.threadpool;
 
+import com.oneinstep.jupiter.threadpool.config.AdaptiveConfig;
+import com.oneinstep.jupiter.threadpool.config.MonitorConfig;
+import com.oneinstep.jupiter.threadpool.config.ThreadPoolConfig;
 import com.oneinstep.jupiter.threadpool.metrics.ThreadPoolMetricsCollector;
 import com.oneinstep.jupiter.threadpool.support.RejectPolicyEnum;
 import io.micrometer.core.instrument.util.NamedThreadFactory;
@@ -13,6 +16,7 @@ import java.util.Optional;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * A named thread pool.
@@ -32,6 +36,9 @@ public class DynamicThreadPool extends ThreadPoolExecutor {
     @Getter
     private final String poolName;
 
+    private final AtomicLong lastTaskCount = new AtomicLong(0);
+    private final AtomicLong lastCompletedTaskCount = new AtomicLong(0);
+
     // 线程池监控收集器
     private volatile ThreadPoolMetricsCollector collector;
 
@@ -44,23 +51,33 @@ public class DynamicThreadPool extends ThreadPoolExecutor {
         this.poolName = threadPoolConfig.getPoolName();
     }
 
+    // 添加任务等待时间的记录
     @Override
-    protected void beforeExecute(Thread t, Runnable r) {
-        super.beforeExecute(t, r);
-        if (r instanceof NamedRunnable namedRunnable) {
-            namedRunnable.setStartTime(System.currentTimeMillis());
-        } else {
-            log.warn("NamedRunnable is required, but got {}", r.getClass());
+    public void execute(@Nonnull Runnable command) {
+        if (!(command instanceof NamedRunnable namedRunnable)) {
+            log.warn("NamedRunnable is required, but got {}", command.getClass());
             throw new IllegalArgumentException("NamedRunnable is required");
         }
+
+        long submitTime = System.currentTimeMillis();
+        namedRunnable.setSubmitTime(submitTime);
+        super.execute(namedRunnable);  // 确保任务被提交到线程池中
     }
 
     @Override
-    protected void afterExecute(Runnable r, Throwable t) {
-        super.afterExecute(r, t);
-        if (r instanceof NamedRunnable task && this.threadPoolConfig.getMonitor().getEnabled()) {
-            String taskName = task.getName();
-            long executionTime = System.currentTimeMillis() - task.getStartTime();
+    protected void beforeExecute(Thread t, Runnable r) {
+        super.beforeExecute(t, r);
+        if (!(r instanceof NamedRunnable namedRunnable)) {
+            log.warn("NamedRunnable is required, but got {}", r.getClass());
+            throw new IllegalArgumentException("NamedRunnable is required");
+        }
+        namedRunnable.setStartTime(System.currentTimeMillis());
+
+        if (this.threadPoolConfig.getMonitor().getEnabled()) {
+            String taskName = namedRunnable.getName();
+            long waitTime = namedRunnable.getStartTime() - namedRunnable.getSubmitTime();
+            log.debug("Task {} waited {} ms before execution", taskName, waitTime);
+
             getCollector().ifPresent(metricsCollector -> {
                 boolean taskRegistered = metricsCollector.isTaskRegistered(taskName);
                 if (!taskRegistered) {
@@ -70,8 +87,26 @@ public class DynamicThreadPool extends ThreadPoolExecutor {
                         }
                     }
                 }
-                recordTask(metricsCollector, t, taskName, executionTime);
+                metricsCollector.addTaskWaitTime(taskName, waitTime);
             });
+        }
+    }
+
+    @Override
+    protected void afterExecute(Runnable command, Throwable t) {
+        super.afterExecute(command, t);
+        if (!(command instanceof NamedRunnable namedRunnable)) {
+            log.warn("NamedRunnable is required, but got {}", command.getClass());
+            throw new IllegalArgumentException("NamedRunnable is required");
+        }
+        namedRunnable.setEndTime(System.currentTimeMillis());
+
+        if (this.threadPoolConfig.getMonitor().getEnabled()) {
+            String taskName = namedRunnable.getName();
+            long executionTime = namedRunnable.getEndTime() - namedRunnable.getStartTime();
+            log.debug("Task {} executed in {} ms", taskName, executionTime);
+
+            getCollector().ifPresent(metricsCollector -> recordTaskAfterFinish(metricsCollector, t, taskName, executionTime));
         }
     }
 
@@ -92,7 +127,7 @@ public class DynamicThreadPool extends ThreadPoolExecutor {
     }
 
     // 记录任务执行情况
-    private void recordTask(ThreadPoolMetricsCollector metricsCollector, Throwable t, String name, long executionTime) {
+    private void recordTaskAfterFinish(ThreadPoolMetricsCollector metricsCollector, Throwable t, String name, long executionTime) {
         metricsCollector.increaseTaskTotalCount(name);
         metricsCollector.addTaskExecutionTime(name, executionTime);
         if (t == null) {
@@ -163,6 +198,23 @@ public class DynamicThreadPool extends ThreadPoolExecutor {
         }
     }
 
+    public synchronized void updateAdaptive(AdaptiveConfig newAdaptiveConfig) {
+
+        // 如果AdaptiveConfig配置有变化，更新配置
+        final AdaptiveConfig oldAdaptiveConfig = this.getThreadPoolConfig().getAdaptive();
+        if (oldAdaptiveConfig == null) {
+            this.getThreadPoolConfig().setAdaptive(newAdaptiveConfig);
+            return;
+        }
+
+        this.getThreadPoolConfig().getAdaptive().setEnabled(newAdaptiveConfig.getEnabled());
+        this.getThreadPoolConfig().getAdaptive().setOnlyIncrease(newAdaptiveConfig.getOnlyIncrease());
+        this.getThreadPoolConfig().getAdaptive().setQueueUsageThreshold(newAdaptiveConfig.getQueueUsageThreshold());
+        this.getThreadPoolConfig().getAdaptive().setThreadUsageThreshold(newAdaptiveConfig.getThreadUsageThreshold());
+        this.getThreadPoolConfig().getAdaptive().setWaitTimeThresholdMs(newAdaptiveConfig.getWaitTimeThresholdMs());
+
+    }
+
 
     // 拒绝策略
     @Getter
@@ -193,6 +245,16 @@ public class DynamicThreadPool extends ThreadPoolExecutor {
 
     public int getRemainingQueueCapacity() {
         return getQueue().remainingCapacity();
+    }
+
+    public long getDeltaTaskCount() {
+        long currentTaskCount = super.getTaskCount();
+        return Math.max(currentTaskCount - lastTaskCount.getAndSet(currentTaskCount), 0);
+    }
+
+    public long getDeltaCompletedTaskCount() {
+        long currentCompletedTaskCount = super.getCompletedTaskCount();
+        return Math.max(currentCompletedTaskCount - lastCompletedTaskCount.getAndSet(currentCompletedTaskCount), 0);
     }
 
     @Override
@@ -259,6 +321,13 @@ public class DynamicThreadPool extends ThreadPoolExecutor {
     public ThreadPoolConfig getThreadPoolConfig() {
         // 为了防止外部修改配置，返回一个新的对象
         return this.threadPoolConfig.copy();
+    }
+
+    public double getAverageWaitTime() {
+        if (collector != null) {
+            return collector.getAverageWaitTime();
+        }
+        return 0;
     }
 
 }

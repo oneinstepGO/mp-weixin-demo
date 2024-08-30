@@ -11,8 +11,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.ToDoubleFunction;
 
-import static com.oneinstep.jupiter.threadpool.DefaultConfigConstants.DEFAULT_BUCKET_SIZE;
-import static com.oneinstep.jupiter.threadpool.DefaultConfigConstants.DEFAULT_TIME_WINDOW_SECONDS;
+import static com.oneinstep.jupiter.threadpool.config.DefaultConfigConstants.DEFAULT_BUCKET_SIZE;
+import static com.oneinstep.jupiter.threadpool.config.DefaultConfigConstants.DEFAULT_TIME_WINDOW_SECONDS;
 import static com.oneinstep.jupiter.threadpool.metrics.MetricsKey.*;
 import static com.oneinstep.jupiter.threadpool.metrics.TagKey.POOL_NAME;
 import static com.oneinstep.jupiter.threadpool.metrics.TagKey.TASK_NAME;
@@ -43,6 +43,8 @@ public class ThreadPoolMetricsCollector {
     private final Map<String, TimeWindowExecutionTimeCounter> taskRTStats = new ConcurrentHashMap<>();
     // key: taskName, value: 是否已经注册
     private final Map<String, Boolean> taskRegistered = new ConcurrentHashMap<>();
+    // key: taskName, value: TimeWindowExecutionTimeCounter
+    private final Map<String, TimeWindowExecutionTimeCounter> taskWaitTimeStats = new ConcurrentHashMap<>();
 
     public void collectPool() {
         if (!running) return; // 如果不在运行状态，直接返回
@@ -53,6 +55,8 @@ public class ThreadPoolMetricsCollector {
         registeredGauges.putIfAbsent(Gauge.builder(THREAD_POOL_ACTIVE_THREADS, threadPool, DynamicThreadPool::getActiveCount).tags(tags).register(meterRegistry), true);
         registeredGauges.putIfAbsent(Gauge.builder(THREAD_POOL_QUEUE_SIZE, threadPool, DynamicThreadPool::getQueueSize).tags(tags).register(meterRegistry), true);
         registeredGauges.putIfAbsent(Gauge.builder(THREAD_POOL_QUEUE_REMAINING_CAPACITY, threadPool, DynamicThreadPool::getRemainingQueueCapacity).tags(tags).register(meterRegistry), true);
+        registeredGauges.putIfAbsent(Gauge.builder(THREAD_POOL_DELTA_TASK_COUNT, threadPool, DynamicThreadPool::getDeltaTaskCount).tags(tags).register(meterRegistry), true);
+        registeredGauges.putIfAbsent(Gauge.builder(THREAD_POOL_DELTA_COMPLETED_TASK_COUNT, threadPool, DynamicThreadPool::getDeltaCompletedTaskCount).tags(tags).register(meterRegistry), true);
     }
 
     public synchronized void stop() {
@@ -61,6 +65,7 @@ public class ThreadPoolMetricsCollector {
         this.taskStats.clear();
         this.taskRTStats.clear();
         this.taskRegistered.clear();
+        this.taskWaitTimeStats.clear();
 
         // 移除所有注册的指标
         registeredGauges.keySet().forEach(g -> meterRegistry.remove(g.getId()));
@@ -113,6 +118,14 @@ public class ThreadPoolMetricsCollector {
                 .addExecutionTime(executionTime);
     }
 
+    // 增加任务等待时间
+    public void addTaskWaitTime(String taskName, long waitTime) {
+        if (!running) return;
+        taskWaitTimeStats.computeIfAbsent(taskName, task -> createExecutionTimeCounter(this.timeWindowSeconds))
+                .addExecutionTime(waitTime);
+    }
+
+
     // 注册任务指标
     public synchronized void registerTaskMetrics(String taskName) {
         if (!running) return;
@@ -125,6 +138,7 @@ public class ThreadPoolMetricsCollector {
         TimeWindowCounter rejectedCounter = taskStat.computeIfAbsent(TASK_REJECTED_COUNT, task -> createCounter(this.timeWindowSeconds));
 
         TimeWindowExecutionTimeCounter rtCounter = taskRTStats.computeIfAbsent(taskName, task -> createExecutionTimeCounter(this.timeWindowSeconds));
+        TimeWindowExecutionTimeCounter waitTimeCounter = taskWaitTimeStats.computeIfAbsent(taskName, task -> createExecutionTimeCounter(this.timeWindowSeconds));
 
         Tags tags = Tags.of(POOL_NAME, threadPool.getPoolName(), TASK_NAME, taskName);
 
@@ -133,6 +147,7 @@ public class ThreadPoolMetricsCollector {
         registeredGauges.putIfAbsent(Gauge.builder(TASK_FAILURE_COUNT, failureCounter, calcQps()).tags(tags).register(meterRegistry), true);
         registeredGauges.putIfAbsent(Gauge.builder(TASK_REJECTED_COUNT, rejectedCounter, calcQps()).tags(tags).register(meterRegistry), true);
         registeredGauges.putIfAbsent(Gauge.builder(TASK_RT, rtCounter, TimeWindowExecutionTimeCounter::getAverage).tags(tags).register(meterRegistry), true);
+        registeredGauges.putIfAbsent(Gauge.builder(TASK_WAIT_TIME, waitTimeCounter, TimeWindowExecutionTimeCounter::getAverage).tags(tags).register(meterRegistry), true);
 
         taskRegistered.put(taskName, true);
     }
@@ -163,4 +178,17 @@ public class ThreadPoolMetricsCollector {
         return new TimeWindowExecutionTimeCounter(DEFAULT_BUCKET_SIZE, timeWindowSeconds == null ? DEFAULT_TIME_WINDOW_SECONDS : timeWindowSeconds);
     }
 
+    public double getAverageExecutionTime() {
+        return taskRTStats.values().stream()
+                .mapToLong(counter -> (long) counter.getAverage())
+                .average()
+                .orElse(0);
+    }
+
+    public double getAverageWaitTime() {
+        return taskWaitTimeStats.values().stream()
+                .mapToLong(counter -> (long) counter.getAverage())
+                .average()
+                .orElse(0);
+    }
 }

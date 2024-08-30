@@ -1,6 +1,8 @@
 package com.oneinstep.jupiter.threadpool;
 
+import com.oneinstep.jupiter.threadpool.config.ThreadPoolConfig;
 import com.oneinstep.jupiter.threadpool.support.NoSuchNamedThreadPoolException;
+import com.oneinstep.jupiter.threadpool.support.SwitchAdaptiveParam;
 import com.oneinstep.jupiter.threadpool.support.SwitchMonitorParam;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Resource;
@@ -104,6 +106,20 @@ public class ThreadPoolViewController {
             dynamicThreadPoolManager.switchMonitor(param);
         } catch (Exception e) {
             log.error("切换监控状态失败", e);
+            model.addAttribute(ERROR, e.getMessage());
+        }
+        return REDIRECT;
+    }
+
+    @PostMapping("/thread-pool/switchAdaptive")
+    public String switchAdaptive(@RequestBody SwitchAdaptiveParam param, Model model) {
+        try {
+            dynamicThreadPoolManager.switchAdaptive(param);
+        } catch (NoSuchNamedThreadPoolException e) {
+            log.error("切换自适应状态失败", e);
+            model.addAttribute(ERROR, "线程池: " + param.poolName() + " 不存在");
+        } catch (Exception e) {
+            log.error("切换自适应状态失败", e);
             model.addAttribute(ERROR, e.getMessage());
         }
         return REDIRECT;

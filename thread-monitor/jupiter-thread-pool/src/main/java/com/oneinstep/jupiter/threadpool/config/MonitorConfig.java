@@ -1,4 +1,4 @@
-package com.oneinstep.jupiter.threadpool;
+package com.oneinstep.jupiter.threadpool.config;
 
 import lombok.Data;
 
@@ -21,10 +21,6 @@ public class MonitorConfig {
         this.enabled = enabled;
         this.timeWindowSeconds = timeWindowSeconds;
         this.monitorUrl = monitorUrl;
-    }
-
-    public MonitorConfig(boolean enabled, Long timeWindowSeconds) {
-        new MonitorConfig(enabled, timeWindowSeconds, null);
     }
 
 }

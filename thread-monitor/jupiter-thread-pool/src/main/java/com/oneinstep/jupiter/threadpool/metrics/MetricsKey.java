@@ -23,6 +23,12 @@ public class MetricsKey {
     // thread_pool_queue_remaining_capacity 线程池-队列剩余大小
     public static final String THREAD_POOL_QUEUE_REMAINING_CAPACITY = "thread_pool_queue_remaining_capacity";
 
+    // thread_pool_delta_task_count 线程池-队列增加任务数
+    public static final String THREAD_POOL_DELTA_TASK_COUNT = "thread_pool_delta_task_count";
+
+    // thread_pool_delta_completed_task_count 线程池-队列完成任务数
+    public static final String THREAD_POOL_DELTA_COMPLETED_TASK_COUNT = "thread_pool_delta_completed_task_count";
+
     // 任务-总数
     public static final String TASK_TOTAL_COUNT = "task_total_count_qps";
 
@@ -37,5 +43,8 @@ public class MetricsKey {
 
     // 任务-平均执行时间
     public static final String TASK_RT = "task_rt";
+
+    // 任务-等待时间
+    public static final String TASK_WAIT_TIME = "task_wait_time";
 
 }

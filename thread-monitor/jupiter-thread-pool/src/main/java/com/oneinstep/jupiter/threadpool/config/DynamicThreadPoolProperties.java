@@ -1,4 +1,4 @@
-package com.oneinstep.jupiter.threadpool;
+package com.oneinstep.jupiter.threadpool.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -18,6 +18,8 @@ public class DynamicThreadPoolProperties {
 
     private GlobalMonitorConfig monitor;
 
+    private GlobalAdaptiveConfig adaptive;
+
     @Data
     public static class GlobalMonitorConfig {
         private MetricsExportConfig export;
@@ -29,6 +31,12 @@ public class DynamicThreadPoolProperties {
         private Boolean enabled;
         private String step;
         private Integer port;
+    }
+
+    @Data
+    public static class GlobalAdaptiveConfig {
+        private Boolean enabled = false; // 是否开启自适应，默认关闭
+        private Long adjustmentIntervalMs = 30000L; // 调整间隔，默认30秒
     }
 
 }

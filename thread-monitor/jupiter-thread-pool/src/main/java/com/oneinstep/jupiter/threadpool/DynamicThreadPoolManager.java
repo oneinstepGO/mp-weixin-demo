@@ -1,7 +1,9 @@
 package com.oneinstep.jupiter.threadpool;
 
+import com.oneinstep.jupiter.threadpool.config.*;
 import com.oneinstep.jupiter.threadpool.support.*;
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -15,9 +17,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Stream;
 
@@ -38,6 +38,106 @@ public class DynamicThreadPoolManager {
 
     // 线程池名称 -> 读写锁
     private static final Map<String, ReentrantReadWriteLock> LOCK_MAP = new HashMap<>();
+
+    // 自适应调整线程池的步长
+    private static final int THREAD_ADJUST_STEP = 2;
+
+    private final ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(1);
+
+    @PostConstruct
+    public void init() {
+        if (dynamicThreadPoolProperties != null && dynamicThreadPoolProperties.getAdaptive() != null && dynamicThreadPoolProperties.getAdaptive().getEnabled()) {
+            scheduledExecutorService.scheduleAtFixedRate(this::monitorAndAdjustThreadPools,
+                    60000, dynamicThreadPoolProperties.getAdaptive().getAdjustmentIntervalMs(), TimeUnit.MILLISECONDS);
+        }
+    }
+
+    public void monitorAndAdjustThreadPools() {
+        String[] poolNames = applicationContext.getBeanNamesForType(DynamicThreadPool.class);
+        for (String poolName : poolNames) {
+            try {
+                DynamicThreadPool threadPool = applicationContext.getBean(poolName, DynamicThreadPool.class);
+                adjustThreadPoolParameters(threadPool);
+            } catch (Exception e) {
+                log.error("Monitor and adjust thread pool [{}] failed", poolName, e);
+            }
+        }
+    }
+
+    /**
+     * 自动调整线程池参数
+     *
+     * @param threadPool 线程池
+     */
+    private void adjustThreadPoolParameters(DynamicThreadPool threadPool) {
+
+        String poolName = threadPool.getPoolName();
+
+        ThreadPoolConfig threadPoolConfig = threadPool.getThreadPoolConfig();
+
+        AdaptiveConfig adaptiveConfig = threadPoolConfig.getAdaptive();
+        if (adaptiveConfig == null || !adaptiveConfig.getEnabled()) {
+            log.debug("Adaptive config is disabled for pool {}", poolName);
+            return;
+        }
+
+        MonitorConfig monitor = threadPoolConfig.getMonitor();
+        if (monitor == null || !monitor.getEnabled()) {
+            log.debug("Monitor is disabled for pool {}", poolName);
+            return;
+        }
+
+        int queueSize = threadPool.getQueueSize();
+        int activeThreads = threadPool.getActiveCount();
+        int corePoolSize = threadPool.getCorePoolSize();
+        int maxPoolSize = threadPool.getMaximumPoolSize();
+        double avgWaitTime = threadPool.getAverageWaitTime();
+
+        boolean onlyIncrease = adaptiveConfig.getOnlyIncrease() == null ? DefaultConfigConstants.DEFAULT_ONLY_INCREASE : adaptiveConfig.getOnlyIncrease();
+        double queueUsageThreshold = adaptiveConfig.getQueueUsageThreshold() == null ? DefaultConfigConstants.DEFAULT_ADAPTIVE_QUEUE_THRESHOLD / 100.00 : adaptiveConfig.getQueueUsageThreshold() / 100.00;
+        double threadUsageThreshold = adaptiveConfig.getThreadUsageThreshold() == null ? DefaultConfigConstants.DEFAULT_ADAPTIVE_THREAD_THRESHOLD / 100.00 : adaptiveConfig.getThreadUsageThreshold() / 100.00;
+        int waitTimeThresholdMs = adaptiveConfig.getWaitTimeThresholdMs() == null ? DefaultConfigConstants.DEFAULT_ADAPTIVE_TIME_THRESHOLD : adaptiveConfig.getWaitTimeThresholdMs();
+
+        double threadUsageRate = (double) activeThreads / maxPoolSize;
+        double queueUsageRate = (double) queueSize / (queueSize + threadPool.getQueue().remainingCapacity());
+
+        boolean needIncreaseCoreThreads = false;
+        boolean needIncreaseThreads = false;
+        boolean needDecreaseThreads = false;
+
+        if (queueUsageRate > queueUsageThreshold) {
+            if (threadUsageRate < threadUsageThreshold) {
+                needIncreaseCoreThreads = true;
+            } else {
+                needIncreaseThreads = true;
+            }
+        } else if (avgWaitTime > waitTimeThresholdMs) {
+            needIncreaseThreads = true;
+        } else if (threadUsageRate < threadUsageThreshold && activeThreads < corePoolSize && !onlyIncrease) {
+            needDecreaseThreads = true;
+        }
+
+        if (needIncreaseCoreThreads) {
+            int newCorePoolSize = Math.min(corePoolSize + THREAD_ADJUST_STEP, maxPoolSize);
+            threadPool.setCorePoolSize(newCorePoolSize);
+            log.info("Increased core pool size to {} for pool {}", newCorePoolSize, threadPool.getPoolName());
+        } else if (needIncreaseThreads) {
+            // 增加线程池大小
+            int newCorePoolSize = Math.min(corePoolSize + THREAD_ADJUST_STEP, maxPoolSize);
+            int newMaxPoolSize = Math.min(maxPoolSize + THREAD_ADJUST_STEP, maxPoolSize * 2); // 确保不会超过系统允许的最大值
+            threadPool.setMaximumPoolSize(newMaxPoolSize);
+            threadPool.setCorePoolSize(newCorePoolSize);
+            log.info("Increased thread pool size: {} (core: {}, max: {})", poolName, newCorePoolSize, newMaxPoolSize);
+        } else if (needDecreaseThreads) {
+            // 减少线程池大小
+            int newCorePoolSize = Math.max(corePoolSize - THREAD_ADJUST_STEP, THREAD_ADJUST_STEP);
+            int newMaxPoolSize = Math.max(maxPoolSize - THREAD_ADJUST_STEP, THREAD_ADJUST_STEP * 2);
+            threadPool.setMaximumPoolSize(newMaxPoolSize);
+            threadPool.setCorePoolSize(newCorePoolSize);
+            log.info("Decreased thread pool size: {} (core: {}, max: {})", poolName, newCorePoolSize, newMaxPoolSize);
+        }
+    }
+
 
     /**
      * 修改线程池参数
@@ -95,7 +195,7 @@ public class DynamicThreadPoolManager {
         }
         if (newConfig.getMonitor() != null && (!Objects.equals(newConfig.getMonitor().getEnabled(), oldConfig.getMonitor().getEnabled())
                 || !Objects.equals(newConfig.getMonitor().getTimeWindowSeconds(), oldConfig.getMonitor().getTimeWindowSeconds())
-        || !Objects.equals(newConfig.getMonitor().getMonitorUrl(), oldConfig.getMonitor().getMonitorUrl()))) {
+                || !Objects.equals(newConfig.getMonitor().getMonitorUrl(), oldConfig.getMonitor().getMonitorUrl()))) {
             needChangeMonitor = true;
         }
 
@@ -189,6 +289,21 @@ public class DynamicThreadPoolManager {
         }
 
         RejectPolicyEnum.getPolicyByName(newConfig.getPolicy());
+
+        if (newConfig.getAdaptive() != null) {
+            if (newConfig.getAdaptive().getQueueUsageThreshold() != null && (newConfig.getAdaptive().getQueueUsageThreshold() < 1 || newConfig.getAdaptive().getQueueUsageThreshold() > 100)) {
+                log.error("Modify thread pool [{}] failed, queueUsageThreshold < 1 or queueUsageThreshold > 100", poolName);
+                throw new IllegalArgumentException("queueUsageThreshold < 1 or queueUsageThreshold > 100");
+            }
+            if (newConfig.getAdaptive().getThreadUsageThreshold() != null && (newConfig.getAdaptive().getThreadUsageThreshold() < 1 || newConfig.getAdaptive().getThreadUsageThreshold() > 100)) {
+                log.error("Modify thread pool [{}] failed, threadUsageThreshold < 1 or threadUsageThreshold > 100", poolName);
+                throw new IllegalArgumentException("threadUsageThreshold < 1 or threadUsageThreshold > 100");
+            }
+            if (newConfig.getAdaptive().getWaitTimeThresholdMs() != null && (newConfig.getAdaptive().getWaitTimeThresholdMs() < 10 || newConfig.getAdaptive().getWaitTimeThresholdMs() > 10000)) {
+                log.error("Modify thread pool [{}] failed, executionTimeThresholdMs < 10 or executionTimeThresholdMs > 10000", poolName);
+                throw new IllegalArgumentException("executionTimeThresholdMs < 10 or executionTimeThresholdMs > 10000");
+            }
+        }
     }
 
 
@@ -325,5 +440,40 @@ public class DynamicThreadPoolManager {
         dynamicThreadPool.updateMonitor(new MonitorConfig(enable,
                 enable ? ms : null,
                 oldMonitor.getMonitorUrl()));
+    }
+
+    public synchronized void switchAdaptive(SwitchAdaptiveParam param) throws NoSuchNamedThreadPoolException {
+        String poolName = param.poolName();
+        boolean enabled = param.enableAdaptive();
+        if (isThreadPoolNotExist(poolName)) {
+            log.error("Switch adaptive failed, pool not found: {}", poolName);
+            throw new NoSuchNamedThreadPoolException("pool not found");
+        }
+        // 检查全局开关
+        if (dynamicThreadPoolProperties != null && dynamicThreadPoolProperties.getAdaptive() != null && dynamicThreadPoolProperties.getAdaptive().getEnabled()) {
+            DynamicThreadPool dynamicThreadPool = applicationContext.getBean(poolName, DynamicThreadPool.class);
+
+            // 只有开启了监控，才能开启自适应
+            if (dynamicThreadPool.getThreadPoolConfig().getMonitor() == null || !dynamicThreadPool.getThreadPoolConfig().getMonitor().getEnabled()) {
+                log.error("Switch adaptive failed, monitor is disabled");
+                throw new IllegalArgumentException("monitor is disabled");
+            }
+            AdaptiveConfig newAdaptiveConfig = getNewAdaptiveConfig(enabled);
+            dynamicThreadPool.updateAdaptive(newAdaptiveConfig);
+            log.info("Switch adaptive success, pool: {}, enable: {}", poolName, param.enableAdaptive());
+        } else {
+            log.error("Switch adaptive failed, adaptive is disabled");
+        }
+
+    }
+
+    private static AdaptiveConfig getNewAdaptiveConfig(boolean enabled) {
+        AdaptiveConfig newAdaptiveConfig = new AdaptiveConfig();
+        newAdaptiveConfig.setEnabled(enabled);
+        newAdaptiveConfig.setOnlyIncrease(enabled ? DefaultConfigConstants.DEFAULT_ONLY_INCREASE : null);
+        newAdaptiveConfig.setQueueUsageThreshold(enabled ? DefaultConfigConstants.DEFAULT_ADAPTIVE_QUEUE_THRESHOLD : null);
+        newAdaptiveConfig.setThreadUsageThreshold(enabled ? DefaultConfigConstants.DEFAULT_ADAPTIVE_THREAD_THRESHOLD : null);
+        newAdaptiveConfig.setWaitTimeThresholdMs(enabled ? DefaultConfigConstants.DEFAULT_ADAPTIVE_TIME_THRESHOLD : null);
+        return newAdaptiveConfig;
     }
 }

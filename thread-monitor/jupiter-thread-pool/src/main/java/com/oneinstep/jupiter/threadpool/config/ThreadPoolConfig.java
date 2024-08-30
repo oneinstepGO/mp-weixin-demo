@@ -1,4 +1,4 @@
-package com.oneinstep.jupiter.threadpool;
+package com.oneinstep.jupiter.threadpool.config;
 
 import lombok.Data;
 
@@ -21,7 +21,10 @@ public class ThreadPoolConfig {
     private String policy = DefaultConfigConstants.DEFAULT_POLICY;
     // The monitor configuration.
     private MonitorConfig monitor = new MonitorConfig();
+    // The adaptive configuration.
+    private AdaptiveConfig adaptive = new AdaptiveConfig();
 
+    // deep copy
     public ThreadPoolConfig copy() {
         ThreadPoolConfig copy = new ThreadPoolConfig();
         copy.setPoolName(this.getPoolName());
@@ -34,6 +37,11 @@ public class ThreadPoolConfig {
         copy.getMonitor().setEnabled(this.getMonitor().getEnabled());
         copy.getMonitor().setTimeWindowSeconds(this.getMonitor().getTimeWindowSeconds());
         copy.getMonitor().setMonitorUrl(this.getMonitor().getMonitorUrl());
+        copy.getAdaptive().setEnabled(this.getAdaptive().getEnabled());
+        copy.getAdaptive().setOnlyIncrease(this.getAdaptive().getOnlyIncrease());
+        copy.getAdaptive().setQueueUsageThreshold(this.getAdaptive().getQueueUsageThreshold());
+        copy.getAdaptive().setThreadUsageThreshold(this.getAdaptive().getThreadUsageThreshold());
+        copy.getAdaptive().setWaitTimeThresholdMs(this.getAdaptive().getWaitTimeThresholdMs());
         return copy;
     }
 
