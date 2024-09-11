@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: elk-boot-demo
+
+server:
+  port: 8088
+
+
+logging:
+  level:
+    root: info
+  file:
+    name: /var/log/elk-boot-demo.log

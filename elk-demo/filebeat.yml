@@ -1,0 +1,15 @@
+filebeat.inputs:
+  - type: container  # 指定输入类型为容器日志
+    paths:
+      - /var/lib/docker/containers/*/*.log  # 指定 Docker 容器日志的路径
+
+    processors:
+      - add_docker_metadata: ~  # 添加 Docker 元数据到事件中
+      - drop_event:  # 事件处理器，用于根据条件丢弃事件
+          when:
+            not:
+              equals:
+                container.name: "elk-boot-demo"  # 只保留容器名为 "elk-boot-demo" 的日志，其他的都丢弃
+
+output.logstash:
+  hosts: ["logstash:5044"]  # 指定 Logstash 的地址和端口，Filebeat 将日志发送到此处

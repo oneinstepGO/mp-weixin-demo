@@ -1,0 +1,8 @@
+# Kibana configuration file
+
+# Server settings
+server.name: "kibana"  # 定义 Kibana 服务器的名称
+server.host: "0.0.0.0"  # 服务器监听的主机地址，0.0.0.0 表示监听所有网络接口
+
+# Elasticsearch settings
+elasticsearch.hosts: ["http://elasticsearch:9200"]  # 指定 Elasticsearch 的地址和端口，Kibana 将连接到此处
