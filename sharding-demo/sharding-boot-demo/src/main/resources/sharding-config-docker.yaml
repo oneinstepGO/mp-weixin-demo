@@ -142,7 +142,7 @@ rules:
           password:
             cipher:
               name: password
-              encryptorName: aes_encryptor、
+              encryptorName: aes_encryptor
     # 加密器
     encryptors:
       # 加密器名称

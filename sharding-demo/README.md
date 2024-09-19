@@ -22,7 +22,7 @@ sharding_db_0
     ├── t_order_2 (order_id, order_name, user_id)
     ├── t_order_item_2 (order_item_id, item_name, order_id, user_id)
     ├── t_user_2 (user_id, username, password, email, telephone)
-    └── t_address (id, address)
+    └── t_address (id, province, city, area, address)
 
 sharding_db_1
     ├── t_order_0 (order_id, order_name, user_id)
@@ -34,7 +34,7 @@ sharding_db_1
     ├── t_order_2 (order_id, order_name, user_id)
     ├── t_order_item_2 (order_item_id, item_name, order_id, user_id)
     ├── t_user_2 (user_id, username, password, email, telephone)
-    └── t_address (id, address)
+    └── t_address (id, province, city, area, address)
 
 sharding_db_2
     ├── t_order_0 (order_id, order_name, user_id)
@@ -46,9 +46,9 @@ sharding_db_2
     ├── t_order_2 (order_id, order_name, user_id)
     ├── t_order_item_2 (order_item_id, item_name, order_id, user_id)
     ├── t_user_2 (user_id, username, password, email, telephone)
-    └── t_address (id, address)
+    └── t_address (id, province, city, area, address)
 ```
-
+> 原则：尽量让同一用户的数据在同一库中，避免跨库查询和跨库事物
 ## 4.启动演示
 - `docker-compose up -d`
 - 添加数据

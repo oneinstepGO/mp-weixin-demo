@@ -9,7 +9,15 @@ import lombok.Data;
 @Table(name = "t_address")
 public class Address {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    private String province;
+
+    private String city;
+
+    private String area;
+
+    private String detail;
 
 }

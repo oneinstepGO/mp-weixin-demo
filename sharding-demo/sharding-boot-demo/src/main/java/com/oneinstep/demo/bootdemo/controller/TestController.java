@@ -1,8 +1,10 @@
 package com.oneinstep.demo.bootdemo.controller;
 
+import com.oneinstep.demo.bootdemo.entity.Address;
 import com.oneinstep.demo.bootdemo.entity.User;
 import com.oneinstep.demo.bootdemo.entity.Order;
 import com.oneinstep.demo.bootdemo.entity.OrderItem;
+import com.oneinstep.demo.bootdemo.repo.AddressRepo;
 import com.oneinstep.demo.bootdemo.repo.UserRepo;
 import com.oneinstep.demo.bootdemo.repo.OrderItemRepo;
 import com.oneinstep.demo.bootdemo.repo.OrderRepo;
@@ -28,6 +30,9 @@ public class TestController {
     private OrderRepo orderRepo;
     @Resource
     private OrderItemRepo orderItemRepo;
+    @Resource
+    private AddressRepo addressRepo;
+
     private Random random = new Random();
 
     @GetMapping("addUserAndOrder")
@@ -98,5 +103,17 @@ public class TestController {
     public Page<OrderItem> getOrderItems(@PathVariable Long orderId, @PathVariable int page, @PathVariable int size) {
         PageRequest pageRequest = PageRequest.of(page, size);
         return orderItemRepo.findOrderItemsByOrderId(orderId, pageRequest);
+    }
+
+    // 测试广播表
+    @GetMapping("/address/add")
+    public String addAddress() {
+        Address address = new Address();
+        address.setProvince("广东省");
+        address.setCity("深圳市");
+        address.setArea("南山区");
+        address.setDetail("科技园" + random.nextInt(1000) + "号");
+        addressRepo.save(address);
+        return "success";
     }
 }

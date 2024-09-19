@@ -21,3 +21,6 @@ GET http://localhost:8088/test/orderItem/1043455772975411201
 
 ### 分页获取订单项
 GET http://localhost:8088/test/orderItems/1043455426706255873/0/2
+
+### 添加地址、广播到所有数据库 t_address 表
+GET http://localhost:8088/test/address/add

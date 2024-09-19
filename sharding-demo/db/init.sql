@@ -83,8 +83,11 @@ CREATE TABLE if not exists t_user_2
 drop table if exists t_address;
 create table if not exists t_address
 (
-    id      bigint primary key,
-    address varchar(512) not null
+    id       bigint primary key auto_increment,
+    province varchar(128) not null,
+    city     varchar(128) not null,
+    area     varchar(128) not null,
+    detail   varchar(512) not null
 );
 
 
@@ -173,8 +176,11 @@ CREATE TABLE if not exists t_user_2
 drop table if exists t_address;
 create table if not exists t_address
 (
-    id      bigint primary key,
-    address varchar(512) not null
+    id       bigint primary key auto_increment,
+    province varchar(128) not null,
+    city     varchar(128) not null,
+    area     varchar(128) not null,
+    detail   varchar(512) not null
 );
 
 
@@ -263,6 +269,9 @@ CREATE TABLE if not exists t_user_2
 drop table if exists t_address;
 create table if not exists t_address
 (
-    id      bigint primary key,
-    address varchar(512) not null
+    id       bigint primary key auto_increment,
+    province varchar(128) not null,
+    city     varchar(128) not null,
+    area     varchar(128) not null,
+    detail   varchar(512) not null
 );
