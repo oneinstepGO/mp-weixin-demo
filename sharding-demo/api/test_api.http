@@ -1,5 +1,5 @@
 ### 新增账户和订单
-GET http://localhost:8088/test/addAccountAndOrder
+GET http://localhost:8088/test/addUserAndOrder
 
 ### 获取所有用户
 GET http://localhost:8088/test/users
@@ -14,7 +14,7 @@ GET http://localhost:8088/test/orderItems
 GET http://localhost:8088/test/user/1043455425984835584
 
 ### 获取订单
-GET http://localhost:8088/test/order/1043455426706255873
+GET http://localhost:8088/test/order/1043489212693196801
 
 ### 获取订单项
 GET http://localhost:8088/test/orderItem/1043455772975411201

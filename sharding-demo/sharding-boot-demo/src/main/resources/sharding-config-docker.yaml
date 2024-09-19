@@ -41,16 +41,16 @@ rules:
   - !SHARDING
     tables:
       # 逻辑表名
-      t_account:
+      t_user:
         # 实际数据节点
-        actualDataNodes: ds_${0..2}.t_account_${0..2}
+        actualDataNodes: ds_${0..2}.t_user_${0..2}
         # 分表策略
         tableStrategy:
           standard:
             # 分表字段
             shardingColumn: user_id
             # 分表算法
-            shardingAlgorithmName: t_account_inline
+            shardingAlgorithmName: t_user_inline
         # 主键生成策略
         keyGenerateStrategy:
           # 主键生成字段
@@ -83,12 +83,12 @@ rules:
         props:
           algorithm-expression: ds_${user_id % 3}
       # 算法名称
-      t_account_inline:
+      t_user_inline:
         # 算法类型-行内表达式
         type: INLINE
         props:
           # 算法表达式
-          algorithm-expression: t_account_${user_id % 3}
+          algorithm-expression: t_user_${user_id % 3}
       t_order_inline:
         type: INLINE
         props:
@@ -127,9 +127,76 @@ rules:
     tables:
       - t_address
 
+  # 加密配置
+  - !ENCRYPT
+    tables:
+      t_user:
+        columns:
+          username:
+            # 加密算法
+            cipher:
+              # 列名
+              name: username
+              # 加密器名称
+              encryptorName: aes_encryptor
+          password:
+            cipher:
+              name: password
+              encryptorName: aes_encryptor、
+    # 加密器
+    encryptors:
+      # 加密器名称
+      aes_encryptor:
+        # 加密器类型
+        type: AES
+        # 加密器参数
+        props:
+          aes-key-value: 123456abc
+          digest-algorithm-name: SHA-1
+      assisted_encryptor:
+        type: MD5
+
+  # 脱敏配置
+  - !MASK
+    tables:
+      t_user:
+        columns:
+          # 脱敏列名
+          password:
+            # 脱敏算法
+            maskAlgorithm: md5_mask
+          email:
+            maskAlgorithm: mask_before_special_chars_mask
+          telephone:
+            maskAlgorithm: keep_first_n_last_m_mask
+
+    # 脱敏算法
+    maskAlgorithms:
+      # 脱敏算法名称
+      md5_mask:
+        # 脱敏算法类型
+        type: MD5
+      mask_before_special_chars_mask:
+        # 在特殊字符前脱敏
+        type: MASK_BEFORE_SPECIAL_CHARS
+        # 脱敏算法参数
+        props:
+          # 特殊字符
+          special-chars: '@'
+          # 替换字符
+          replace-char: '*'
+      keep_first_n_last_m_mask:
+        # 保留前N位和后M位
+        type: KEEP_FIRST_N_LAST_M
+        props:
+          # 保留前N位
+          first-n: 3
+          # 保留后M位
+          last-m: 4
+          # 替换字符
+          replace-char: '*'
+
 # 属性
 props:
   # 显示SQL
   sql-show: true
-
-
