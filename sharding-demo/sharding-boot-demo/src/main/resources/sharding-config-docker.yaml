@@ -1,0 +1,135 @@
+mode:
+  # 单机模式，生产请用集群模式
+  type: Standalone
+  repository:
+    type: JDBC
+
+# 配置数据源
+dataSources:
+  ds_0:
+    # 数据源类型
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    # 数据库驱动
+    driverClassName: com.mysql.cj.jdbc.Driver
+    # 数据库连接地址
+    jdbcUrl: jdbc:mysql://sharding-mysql:3306/sharding_db_0?serverTimezone=UTC&useSSL=false&useUnicode=true&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    # 数据库用户名
+    username: root
+    # 数据库密码
+    password: root_password
+  ds_1:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: com.mysql.cj.jdbc.Driver
+    # 数据库连接地址
+    jdbcUrl: jdbc:mysql://sharding-mysql:3306/sharding_db_1?serverTimezone=UTC&useSSL=false&useUnicode=true&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    # 数据库用户名
+    username: root
+    # 数据库密码
+    password: root_password
+  ds_2:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: com.mysql.cj.jdbc.Driver
+    # 数据库连接地址
+    jdbcUrl: jdbc:mysql://sharding-mysql:3306/sharding_db_2?serverTimezone=UTC&useSSL=false&useUnicode=true&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    # 数据库用户名
+    username: root
+    # 数据库密码
+    password: root_password
+
+# 配置分片规则
+rules:
+  - !SHARDING
+    tables:
+      # 逻辑表名
+      t_account:
+        # 实际数据节点
+        actualDataNodes: ds_${0..2}.t_account_${0..2}
+        # 分表策略
+        tableStrategy:
+          standard:
+            # 分表字段
+            shardingColumn: user_id
+            # 分表算法
+            shardingAlgorithmName: t_account_inline
+        # 主键生成策略
+        keyGenerateStrategy:
+          # 主键生成字段
+          column: user_id
+          # 主键生成器
+          keyGeneratorName: snowflake
+      t_order:
+        actualDataNodes: ds_${0..2}.t_order_${0..2}
+        tableStrategy:
+          standard:
+            shardingColumn: order_id
+            shardingAlgorithmName: t_order_inline
+        keyGenerateStrategy:
+          column: order_id
+          keyGeneratorName: snowflake
+      t_order_item:
+        actualDataNodes: ds_${0..2}.t_order_item_${0..2}
+        tableStrategy:
+          standard:
+            shardingColumn: order_id
+            shardingAlgorithmName: t_order_item_inline
+        keyGenerateStrategy:
+          column: order_item_id
+          keyGeneratorName: snowflake
+    # 分片算法
+    shardingAlgorithms:
+      # 分库算法
+      database_inline:
+        type: INLINE
+        props:
+          algorithm-expression: ds_${user_id % 3}
+      # 算法名称
+      t_account_inline:
+        # 算法类型-行内表达式
+        type: INLINE
+        props:
+          # 算法表达式
+          algorithm-expression: t_account_${user_id % 3}
+      t_order_inline:
+        type: INLINE
+        props:
+          algorithm-expression: t_order_${order_id % 3}
+      t_order_item_inline:
+        type: INLINE
+        props:
+          algorithm-expression: t_order_item_${order_id % 3}
+
+    keyGenerators:
+      # 主键生成器
+      snowflake:
+        # 主键生成器类型
+        type: SNOWFLAKE
+        # 主键生成器参数
+        props:
+          worker-id: 123
+    # 强制路由
+    auditors:
+      sharding_key_required_auditor:
+        type: DML_SHARDING_CONDITIONS
+
+    # 绑定表
+    bindingTables:
+      - t_order,t_order_item
+    # 默认分库策略
+    defaultDatabaseStrategy:
+      standard:
+        shardingColumn: user_id
+        shardingAlgorithmName: database_inline
+    # 默认分片字段
+    defaultShardingColumn: user_id
+
+  # 广播表
+  - !BROADCAST
+    tables:
+      - t_address
+
+# 属性
+props:
+  # 显示SQL
+  sql-show: true
+
+

@@ -1,0 +1,42 @@
+services:
+  sharding-mysql:
+    image: sharding-mysql
+    container_name: sharding-mysql
+    build:
+      context: ./
+      dockerfile: ./db/Dockerfile
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+#    volumes:
+#      - mysql-data:/var/lib/mysql
+    command: --lower_case_table_names=1
+    ports:
+      - 3308:3306
+    networks:
+      - sharding-network
+
+  sharding-boot-demo:
+    image: sharding-boot-demo
+    container_name: sharding-boot-demo
+    build:
+      context: ./sharding-boot-demo
+      dockerfile: Dockerfile
+    environment:
+      DB_HOST: sharding-mysql
+      DB_PORT: 3306
+      DB_USERNAME: root
+      DB_PASSWORD: root_password
+    restart: always
+    ports:
+      - 8088:8088
+    depends_on:
+      - sharding-mysql
+    networks:
+      - sharding-network
+#volumes:
+#  mysql-data:
+#    driver: local
+
+networks:
+  sharding-network:
