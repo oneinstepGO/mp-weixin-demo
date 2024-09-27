@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kibana-elk
+spec:
+  selector:
+    matchLabels:
+      app: kibana-elk
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: kibana-elk
+    spec:
+      volumes:
+        - name: kibana-elk-config
+          configMap:
+            name: kibana-elk-config
+        - name: kibana-config-dir
+          emptyDir: { }
+      initContainers:
+        - name: init-kibana
+          image: busybox
+          command: [ 'sh', '-c', 'cp /config/kibana.yml /usr/share/kibana/config/' ]
+          volumeMounts:
+            - name: kibana-elk-config
+              mountPath: /config
+            - name: kibana-config-dir
+              mountPath: /usr/share/kibana/config
+      containers:
+        - name: kibana-elk
+          image: docker.elastic.co/kibana/kibana:8.15.1
+          ports:
+            - containerPort: 5601
+          volumeMounts:
+            - name: kibana-config-dir
+              mountPath: /usr/share/kibana/config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kibana-elk
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: 5601
+      targetPort: 5601
+  selector:
+    app: kibana-elk
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kibana-elk-config
+data:
+  kibana.yml: |
+
+    # Server settings
+    server.name: "kibana-elk"  # 定义 Kibana 服务器的名称
+    server.host: "0.0.0.0"  # 服务器监听的主机地址，0.0.0.0 表示监听所有网络接口
+
+    # Elasticsearch settings
+    elasticsearch.hosts: [ "http://elasticsearch-elk:9200" ]

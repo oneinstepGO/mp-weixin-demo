@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: filebeat-elk
+spec:
+  selector:
+    matchLabels:
+      app: filebeat-elk
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: filebeat-elk
+    spec:
+      containers:
+        - name: filebeat-elk
+          image: chainguard/filebeat:latest
+          volumeMounts:
+            - name: varlibdockercontainers
+              mountPath: /var/lib/docker/containers
+              readOnly: true
+            - name: varrundockersock
+              mountPath: /var/run/docker.sock
+              readOnly: true
+            - name: filebeat-elk-config
+              mountPath: /usr/share/filebeat/filebeat.yml
+              subPath: filebeat.yml
+      volumes:
+        - name: varlibdockercontainers
+          hostPath:
+            path: /var/lib/docker/containers
+        - name: varrundockersock
+          hostPath:
+            path: /var/run/docker.sock
+        - name: filebeat-elk-config
+          configMap:
+            name: filebeat-elk-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: filebeat-elk
+spec:
+  type: NodePort
+  ports:
+    - port: 5044
+      targetPort: 5044
+  selector:
+    app: filebeat-elk
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: filebeat-elk-config
+data:
+  filebeat.yml: |
+    filebeat.inputs:
+      - type: container
+        paths:
+          - /var/lib/docker/containers/*/*.log
+
+        processors:
+          - add_docker_metadata: ~
+          - drop_event:
+              when:
+                not:
+                  equals:
+                    container.name: "elk-boot-demo"
+
+    output.logstash:
+      hosts: ["logstash-elk:5044"]

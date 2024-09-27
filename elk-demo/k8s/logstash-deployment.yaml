@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logstash-elk
+spec:
+  selector:
+    matchLabels:
+      app: logstash-elk
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: logstash-elk
+    spec:
+      containers:
+        - name: logstash-elk
+          image: docker.elastic.co/logstash/logstash:8.15.1
+          ports:
+            - containerPort: 5044
+            - containerPort: 9600
+          volumeMounts:
+            - name: logstash-elk-config
+              mountPath: /usr/share/logstash/pipeline
+      volumes:
+        - name: logstash-elk-config
+          configMap:
+            name: logstash-elk-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: logstash-elk
+spec:
+  type: NodePort
+  ports:
+    - name: beats
+      port: 5044
+      targetPort: 5044
+    - name: http
+      port: 9600
+      targetPort: 9600
+  selector:
+    app: logstash-elk
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logstash-elk-config
+data:
+  logstash.conf: |
+    input {
+      beats {
+        port => 5044
+      }
+    }
+
+    filter {
+      # 你可以在这里添加你的过滤器
+      # 例如，可以使用 grok 解析日志，或使用 mutate 修改字段
+    }
+
+    output {
+      elasticsearch {
+        hosts => ["http://elasticsearch-elk:9200"]
+        index => "springboot-logs-%{+YYYY.MM.dd}"
+      }
+    }

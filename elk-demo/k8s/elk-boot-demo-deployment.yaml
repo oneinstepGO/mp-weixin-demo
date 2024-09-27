@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elk-boot-demo
+spec:
+  selector:
+    matchLabels:
+      app: elk-boot-demo
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: elk-boot-demo
+    spec:
+      containers:
+        - name: elk-boot-demo
+          image: henryxy/elk-boot-demo:1.0
+          ports:
+            - containerPort: 8088
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elk-boot-demo
+spec:
+  type: NodePort
+  ports:
+    - port: 8088
+      targetPort: 8088
+  selector:
+    app: elk-boot-demo
