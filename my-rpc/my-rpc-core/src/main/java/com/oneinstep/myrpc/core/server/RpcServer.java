@@ -15,6 +15,8 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -116,6 +118,8 @@ public class RpcServer implements ApplicationListener<ContextRefreshedEvent> {
                                                 0,                 // length adjustment
                                                 4                  // initial bytes to strip
                                         ))
+                                        // 添加日志处理器
+                                        .addLast(new LoggingHandler(LogLevel.INFO))
                                         // 添加编码器
                                         .addLast(new RpcEncoder(RpcResponse.class))
                                         // 添加解码器

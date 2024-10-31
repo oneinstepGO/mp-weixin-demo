@@ -10,6 +10,8 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
@@ -55,6 +57,8 @@ public class RpcClient {
                                             0,                 // length adjustment
                                             4                  // initial bytes to strip
                                     ))
+                                    // 添加日志处理器
+                                    .addLast(new LoggingHandler(LogLevel.INFO))
                                     // 添加编码器
                                     .addLast(new RpcEncoder(RpcRequest.class))
                                     // 添加解码器
