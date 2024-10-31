@@ -9,6 +9,7 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
@@ -45,13 +46,21 @@ public class RpcClient {
                     .handler(new ChannelInitializer<>() {
                         @Override
                         protected void initChannel(Channel ch) {
-                            ChannelPipeline pipeline = ch.pipeline();
-                            // Encode request
-                            pipeline.addLast(new RpcEncoder(RpcRequest.class));
-                            // Decode response
-                            pipeline.addLast(new RpcDecoder(RpcResponse.class));
-                            // 处理 RPC 响应
-                            pipeline.addLast(new RpcClientHandler());
+                            ch.pipeline()
+                                    // 添加 LengthFieldBasedFrameDecoder 解码器，处理半包消息
+                                    .addLast(new LengthFieldBasedFrameDecoder(
+                                            Integer.MAX_VALUE, // max frame length
+                                            0,                 // length field offset
+                                            4,                 // length field length
+                                            0,                 // length adjustment
+                                            4                  // initial bytes to strip
+                                    ))
+                                    // 添加编码器
+                                    .addLast(new RpcEncoder(RpcRequest.class))
+                                    // 添加解码器
+                                    .addLast(new RpcDecoder(RpcResponse.class))
+                                    // 添加客户端处理器
+                                    .addLast(new RpcClientHandler());
                         }
                     });
 

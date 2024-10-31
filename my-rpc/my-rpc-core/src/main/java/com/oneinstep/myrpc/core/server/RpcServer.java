@@ -14,6 +14,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -107,6 +108,14 @@ public class RpcServer implements ApplicationListener<ContextRefreshedEvent> {
                             @Override
                             protected void initChannel(SocketChannel socketChannel) throws Exception {
                                 socketChannel.pipeline()
+                                        // 添加 LengthFieldBasedFrameDecoder 解码器，处理半包消息
+                                        .addLast(new LengthFieldBasedFrameDecoder(
+                                                Integer.MAX_VALUE, // max frame length
+                                                0,                 // length field offset
+                                                4,                 // length field length
+                                                0,                 // length adjustment
+                                                4                  // initial bytes to strip
+                                        ))
                                         // Decode request
                                         .addLast(new RpcDecoder(RpcRequest.class))
                                         // Encode response
