@@ -24,10 +24,11 @@ public class RpcEncoder extends MessageToByteEncoder<Object> {
     protected void encode(ChannelHandlerContext ctx, Object msg, ByteBuf out) {
         // If the generic class is an instance of the message, serialize the message
         if (genericClass.isInstance(msg)) {
-            // Serialize the message
+            // 序列化消息内容为字节数组
             byte[] bytes = SerializeUtil.serialize(msg);
-            // Write the length of the serialized data
+            // 写入消息的长度
             out.writeInt(bytes.length);
+            // 写入消息的内容
             out.writeBytes(bytes);
         }
     }

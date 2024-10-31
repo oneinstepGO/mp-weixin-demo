@@ -25,32 +25,15 @@ public class RpcDecoder extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
-
-        // If the readable bytes is less than 4, it means that the data length is not yet complete
+        // If the readable length of the ByteBuf is less than 4, return directly
         if (in.readableBytes() < 4) {
             return;
         }
-
-        // Mark the current read index so that we can reset it when needed
-        in.markReaderIndex();
-        // 读取数据长度
-        int dataLength = in.readInt();
-        if (dataLength < 0) {
-            ctx.close();
-            return;
-        }
-
-        // If the readable bytes is less than the data length, it means that the data is not yet complete
-        if (in.readableBytes() < dataLength) {
-            in.resetReaderIndex();
-            return;
-        }
-
-        // Read the data
-        byte[] data = new byte[dataLength];
+        // 由于使用了 LengthFieldBasedFrameDecoder 解码器，前 4 个字节是消息的长度
+        byte[] data = new byte[in.readableBytes()];
         in.readBytes(data);
 
-        // Convert the data to an object
+        // 反序列化
         Object deserialize = SerializeUtil.deserialize(data, genericClass);
         out.add(deserialize);
     }

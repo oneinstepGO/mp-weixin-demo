@@ -106,7 +106,7 @@ public class RpcServer implements ApplicationListener<ContextRefreshedEvent> {
                         .channel(NioServerSocketChannel.class)
                         .childHandler(new ChannelInitializer<SocketChannel>() {
                             @Override
-                            protected void initChannel(SocketChannel socketChannel) throws Exception {
+                            protected void initChannel(SocketChannel socketChannel) {
                                 socketChannel.pipeline()
                                         // 添加 LengthFieldBasedFrameDecoder 解码器，处理半包消息
                                         .addLast(new LengthFieldBasedFrameDecoder(
@@ -116,10 +116,10 @@ public class RpcServer implements ApplicationListener<ContextRefreshedEvent> {
                                                 0,                 // length adjustment
                                                 4                  // initial bytes to strip
                                         ))
-                                        // Decode request
-                                        .addLast(new RpcDecoder(RpcRequest.class))
-                                        // Encode response
+                                        // 添加编码器
                                         .addLast(new RpcEncoder(RpcResponse.class))
+                                        // 添加解码器
+                                        .addLast(new RpcDecoder(RpcRequest.class))
                                         // Processing RPC request
                                         .addLast(new RpcServerHandler(handlerMap));
                             }
