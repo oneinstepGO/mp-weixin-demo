@@ -2,16 +2,21 @@ package com.oneinstep.myrpc.core.registry;
 
 import com.oneinstep.myrpc.core.exception.ServiceNotFoundException;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.KeeperException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -26,6 +31,7 @@ public class ServiceRegistry {
 
     private final Random random = new Random();
 
+    private final Map<String, List<String>> CACHED_ADDRESS_LIST = new ConcurrentHashMap<>();
     /**
      * ZooKeeper client
      */
@@ -40,6 +46,13 @@ public class ServiceRegistry {
                 .retryPolicy(new ExponentialBackoffRetry(1000, 3))
                 .build();
         client.start();
+
+    }
+
+    @PreDestroy
+    public void close() {
+        log.info("Closing ZooKeeper client");
+        client.close();
     }
 
     /**
@@ -70,17 +83,33 @@ public class ServiceRegistry {
      */
     public String discover(String serviceName, String version) throws Exception {
         String servicePath = "/my-rpc/" + serviceName + "/" + version;
+        String cacheKey = serviceName + "#" + version;
         List<String> addressList;
+        boolean fromCache = false;
         try {
             addressList = client.getChildren().forPath(servicePath);
-        } catch (org.apache.zookeeper.KeeperException ke) {
-            throw new ServiceNotFoundException("Service not found: " + serviceName + " version: " + version);
+        } catch (KeeperException ke) {
+            // get from cache
+            addressList = CACHED_ADDRESS_LIST.get(cacheKey);
+            fromCache = true;
+            log.info("Service discovered from cache: {}", addressList);
+
         }
         if (addressList == null || addressList.isEmpty()) {
             log.error("Service not found: {}", serviceName);
             throw new ServiceNotFoundException("Service not found: " + serviceName + " version: " + version);
         }
         log.info("Service discovered: {}", addressList);
+
+        if (!fromCache) {
+            // compare and Save the service address to the cache
+            List<String> cache = CACHED_ADDRESS_LIST.get(cacheKey);
+            if (cache == null || !new HashSet<>(cache).containsAll(addressList) || !new HashSet<>(addressList).containsAll(cache)) {
+                // overwrite cache
+                CACHED_ADDRESS_LIST.put(cacheKey, addressList);
+            }
+        }
+
         // 随机获取一个服务地址
         String addressNode = addressList.get(random.nextInt(addressList.size()));
         byte[] addressBytes = client.getData().forPath(servicePath + "/" + addressNode);
