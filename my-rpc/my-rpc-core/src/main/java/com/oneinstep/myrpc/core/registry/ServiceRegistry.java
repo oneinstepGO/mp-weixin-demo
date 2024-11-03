@@ -9,6 +9,8 @@ import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.Watcher;
+import org.apache.zookeeper.data.Stat;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -31,7 +33,7 @@ public class ServiceRegistry {
 
     private final Random random = new Random();
 
-    private final Map<String, List<String>> CACHED_ADDRESS_LIST = new ConcurrentHashMap<>();
+    private static final Map<String, List<String>> CACHED_ADDRESS_LIST = new ConcurrentHashMap<>();
     /**
      * ZooKeeper client
      */
@@ -64,12 +66,27 @@ public class ServiceRegistry {
      * @throws Exception exception
      */
     public void register(String serviceName, String version, String serviceAddress) throws Exception {
-        String servicePath = "/my-rpc/" + serviceName;
+        String serviceNode = serviceName + "#" + version;
         // Create a ephemeral sequential node, When the connection is closed, the node will be deleted automatically
         // The node name is like: /my-rpc/com.oneinstep.myrpc.api.ExampleService/address-0000000001
         client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL_SEQUENTIAL)
-                .forPath(servicePath + "/" + version + "/" + "address-", serviceAddress.getBytes());
+                .forPath("/my-rpc/" + serviceNode + "/" + "address-", serviceAddress.getBytes());
         log.info("Service registered: service:{},version:{} => {}", serviceName, version, serviceAddress);
+
+        // watch the service node, if the service node is deleted, the client will be notified
+        client.getData().usingWatcher((Watcher) watchedEvent -> {
+            try {
+                List<String> addressList = client.getChildren().forPath("/my-rpc/" + serviceNode);
+                // compare and Save the service address to the cache
+                List<String> cache = CACHED_ADDRESS_LIST.get(serviceNode);
+                if (cache == null || !new HashSet<>(cache).containsAll(addressList) || !new HashSet<>(addressList).containsAll(cache)) {
+                    // overwrite cache
+                    CACHED_ADDRESS_LIST.put(serviceNode, addressList);
+                }
+            } catch (Exception e) {
+                log.error("Failed to get service address list", e);
+            }
+        }).forPath("/my-rpc/" + serviceNode);
     }
 
 
@@ -86,6 +103,11 @@ public class ServiceRegistry {
         String cacheKey = serviceName + "#" + version;
         List<String> addressList;
         boolean fromCache = false;
+        Stat stat = client.checkExists().forPath(servicePath);
+        if (stat == null) {
+            log.error("Service not found: {}", serviceName);
+            throw new ServiceNotFoundException("Service not found: " + serviceName + " version: " + version);
+        }
         try {
             addressList = client.getChildren().forPath(servicePath);
         } catch (KeeperException ke) {
