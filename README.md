@@ -1,6 +1,6 @@
 # 微信技术公众号 ”子安聊代码“ 的示例代码
 
-## 01.[【注解驱动器，实现Lombok】](my-lombok)
+## 01.[注解驱动器，实现Lombok](my-lombok)
 [文章地址](https://mp.weixin.qq.com/s/gscNRiLrCQxA0ahcFuxGYA)
 
 ## 02.[RPC框架原理](my-rpc)
