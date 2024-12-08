@@ -1,0 +1,9 @@
+## 现金可取
+
+if 帐户类型 == 'Cash' {
+   return max(Tn日结余, 0);
+} elsif 帐户类型 == 'Margin' {
+   return max(min(Tn日结余, 资产净值 - 风控系数 * (总初始保证金 - 总维持保证金) - 总维持保证金), 0);
+} else {
+   throw new Exception("账户类型错误");
+}
