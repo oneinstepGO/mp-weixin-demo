@@ -20,12 +20,17 @@
 ## 07. [RocketMQ 与 Kafka 有何不同？（上）]()
 [文章地址](https://mp.weixin.qq.com/s/P40GLfVa7oFq0c0JgolvIQ)
 
+## 08. [RocketMQ 与 Kafka 有何不同？（下）]()
+[文章地址](https://mp.weixin.qq.com/s/ioIr3nTBX5AMm3r8f49Mjw)
+
+## 09. [如何设计一个分布式缓存系统？]()
+[文章地址](https://mp.weixin.qq.com/s/y4LRACWVP7f6nkpZbylHpg)
 ---
 
 欢迎关注我的公众号“**子安聊代码**”，一起探讨技术。
-<center>
-    <img src="https://mp-img-1300842660.cos.ap-guangzhou.myqcloud.com/1724139391246-0dfa7dad-5977-44c1-90ca-55539184d575.jpg" style="width: 100px;">
-</center>
+<div style="text-align: center;">
+    <img src="https://mp-img-1300842660.cos.ap-guangzhou.myqcloud.com/1724139391246-0dfa7dad-5977-44c1-90ca-55539184d575.jpg" style="width: 100px;" alt="">
+</div>
 
 
 
